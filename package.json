@@ -1,10 +1,10 @@
 {
-  "name": "create-universal-app",
+  "name": "create-uni-stack",
   "version": "1.0.0",
   "description": "CLI tool to scaffold cross-platform apps with One, Tamagui, Supabase, and Stripe",
   "type": "module",
   "bin": {
-    "create-universal-app": "./bin/index.js"
+    "create-uni-stack": "./bin/index.js"
   },
   "main": "bin/index.js",
   "scripts": {
