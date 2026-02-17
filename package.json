@@ -1,7 +1,7 @@
 {
   "name": "create-uni-stack",
   "version": "1.0.0",
-  "description": "CLI tool to scaffold cross-platform apps with One, Tamagui, Supabase, and Stripe",
+  "description": "CLI tool to scaffold cross-platform apps with Expo Router, Tamagui, Supabase, and Stripe",
   "type": "module",
   "bin": {
     "create-uni-stack": "./bin/index.js"
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node bin/index.js"
   },
-  "keywords": ["cli", "scaffold", "tamagui", "expo", "react-native", "one", "supabase", "stripe"],
+  "keywords": ["cli", "scaffold", "tamagui", "expo", "expo-router", "react-native", "supabase", "stripe"],
   "files": ["bin", "src", "templates", "README.md"],
   "license": "MIT",
   "dependencies": {

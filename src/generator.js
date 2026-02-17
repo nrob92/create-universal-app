@@ -84,7 +84,8 @@ export async function generateProject({ projectName, platforms }) {
 
   // Generate dynamic config files
   await generatePackageJson(projectDir, projectName, platforms);
-  await generateViteConfig(projectDir);
+  await generateBabelConfig(projectDir);
+  await generateMetroConfig(projectDir);
   await generateAppConfig(projectDir, projectName, platforms);
   await generateTsConfig(projectDir);
 }
@@ -94,9 +95,14 @@ async function generatePackageJson(projectDir, projectName, platforms) {
   const hasWeb = platforms.includes('web');
 
   const deps = {
-    'one': '^1.1.0',
+    'expo': '~52.0.0',
+    'expo-router': '~4.0.0',
     'react': '^18.3.0',
+    'react-native': '^0.76.0',
+    'react-native-web': '^0.19.0',
     'react-dom': '^18.3.0',
+    'react-native-safe-area-context': '^4.12.0',
+    'react-native-screens': '~4.4.0',
     'tamagui': '^1.116.0',
     '@tamagui/config': '^1.116.0',
     '@tamagui/core': '^1.116.0',
@@ -107,42 +113,35 @@ async function generatePackageJson(projectDir, projectName, platforms) {
 
   if (hasWeb) {
     deps['@stripe/stripe-js'] = '^2.4.0';
+    deps['@expo/metro-runtime'] = '~4.0.0';
   }
 
   if (hasMobile) {
-    deps['expo'] = '~52.0.0';
-    deps['expo-router'] = '~4.0.0';
-    deps['react-native'] = '^0.76.0';
-    deps['react-native-web'] = '^0.19.0';
     deps['react-native-iap'] = '^14.0.0';
     deps['expo-dev-client'] = '~5.0.0';
-  } else {
-    // Web-only still needs react-native-web for tamagui
-    deps['react-native-web'] = '^0.19.0';
   }
 
   const devDeps = {
     'typescript': '^5.6.0',
     '@types/react': '^18.3.0',
-    'vite': '^6.0.0',
-    '@tamagui/vite-plugin': '^1.116.0',
+    '@babel/core': '^7.25.0',
+    '@tamagui/babel-plugin': '^1.116.0',
   };
 
-  if (hasMobile) {
-    devDeps['@tamagui/babel-plugin'] = '^1.116.0';
-  }
-
   const scripts = {
-    'dev': 'one dev',
-    'build': 'one build',
-    'start': 'one start',
+    'dev': 'npx expo start',
+    'build:web': 'npx expo export --platform web',
+    'start': 'npx expo start',
   };
 
   if (platforms.includes('ios')) {
-    scripts['ios'] = 'one ios';
+    scripts['ios'] = 'npx expo start --ios';
   }
   if (platforms.includes('android')) {
-    scripts['android'] = 'one android';
+    scripts['android'] = 'npx expo start --android';
+  }
+  if (hasWeb) {
+    scripts['web'] = 'npx expo start --web';
   }
 
   const pkg = {
@@ -157,25 +156,34 @@ async function generatePackageJson(projectDir, projectName, platforms) {
   await fs.writeJson(path.join(projectDir, 'package.json'), pkg, { spaces: 2 });
 }
 
-async function generateViteConfig(projectDir) {
-  const content = `import { one } from 'one/vite';
-import { tamaguiPlugin } from '@tamagui/vite-plugin';
-
-export default {
-  plugins: [
-    one({
-      web: {
-        defaultRenderMode: 'spa',
-      },
-    }),
-    tamaguiPlugin({
-      components: ['tamagui'],
-      config: './src/tamagui/tamagui.config.ts',
-    }),
-  ],
+async function generateBabelConfig(projectDir) {
+  const content = `module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+    plugins: [
+      [
+        '@tamagui/babel-plugin',
+        {
+          components: ['tamagui'],
+          config: './src/tamagui/tamagui.config.ts',
+        },
+      ],
+    ],
+  };
 };
 `;
-  await fs.writeFile(path.join(projectDir, 'vite.config.ts'), content);
+  await fs.writeFile(path.join(projectDir, 'babel.config.js'), content);
+}
+
+async function generateMetroConfig(projectDir) {
+  const content = `const { getDefaultConfig } = require('expo/metro-config');
+
+const config = getDefaultConfig(__dirname);
+
+module.exports = config;
+`;
+  await fs.writeFile(path.join(projectDir, 'metro.config.js'), content);
 }
 
 async function generateAppConfig(projectDir, projectName, platforms) {
@@ -201,10 +209,7 @@ async function generateAppConfig(projectDir, projectName, platforms) {
     },`;
   }
 
-  const platformsList = platforms.filter(p => p === 'ios' || p === 'android');
-  const platformsArray = platformsList.length > 0
-    ? `\n    platforms: [${platformsList.map(p => `'${p}'`).join(', ')}],`
-    : '';
+  const platformsArray = `\n    platforms: [${platforms.map(p => `'${p}'`).join(', ')}],`;
 
   const content = `import { type ExpoConfig } from 'expo/config';
 
@@ -212,7 +217,12 @@ const config: ExpoConfig = {
   name: '${projectName}',
   slug: '${slug}',
   version: '1.0.0',
-  orientation: 'portrait',${platformsArray}${platformBlocks}
+  scheme: '${slug}',
+  orientation: 'portrait',${platformsArray}
+  web: {
+    bundler: 'metro',
+    output: 'single',
+  },${platformBlocks}
   plugins: ['expo-router'],
 };
 

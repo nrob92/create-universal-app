@@ -7,7 +7,7 @@ import chalk from 'chalk';
 
 async function main() {
   console.log(chalk.bold.cyan('\n  ✦ Universal App Generator\n'));
-  console.log(chalk.dim('  Scaffold cross-platform apps with One, Tamagui, Supabase & Stripe\n'));
+  console.log(chalk.dim('  Scaffold cross-platform apps with Expo Router, Tamagui, Supabase & Stripe\n'));
 
   const answers = await runPrompts();
 
@@ -24,22 +24,26 @@ async function main() {
     process.exit(1);
   }
 
+  let pm = 'bun';
   if (answers.runInstall) {
-    await runInstaller(answers.projectName);
+    const usedPm = await runInstaller(answers.projectName);
+    if (usedPm) pm = usedPm;
   }
+
+  const runCmd = pm === 'npm' ? 'npm run' : pm;
 
   console.log(chalk.bold.green('\n  Done! Next steps:\n'));
   console.log(chalk.white(`    cd ${answers.projectName}`));
   if (!answers.runInstall) {
-    console.log(chalk.white('    bun install'));
+    console.log(chalk.white(`    ${pm} install`));
   }
   console.log(chalk.white('    cp .env.example .env'));
   console.log(chalk.white('    # Fill in your Supabase & Stripe keys in .env'));
-  console.log(chalk.white('    bun dev\n'));
+  console.log(chalk.white(`    ${runCmd} dev\n`));
 
   const platformList = answers.platforms.join(', ');
   console.log(chalk.dim(`  Platforms: ${platformList}`));
-  console.log(chalk.dim('  Framework: One + Vite + Tamagui'));
+  console.log(chalk.dim('  Framework: Expo Router + Tamagui'));
   console.log(chalk.dim('  Auth: Supabase | Payments: Stripe + IAP\n'));
 }
 

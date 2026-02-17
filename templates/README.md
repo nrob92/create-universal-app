@@ -1,6 +1,6 @@
 # {{PROJECT_NAME}}
 
-Cross-platform app built with One, Tamagui, Supabase, and Stripe.
+Cross-platform app built with Expo Router, Tamagui, Supabase, and Stripe.
 
 ## Getting Started
 
@@ -17,15 +17,16 @@ Cross-platform app built with One, Tamagui, Supabase, and Stripe.
 
 3. Start development:
    ```bash
-   bun dev          # Web (localhost)
-   bun ios          # iOS simulator
-   bun android      # Android emulator
+   npx expo start          # Start dev server
+   npx expo start --web    # Web (localhost)
+   npx expo start --ios    # iOS simulator
+   npx expo start --android # Android emulator
    ```
 
 ## Project Structure
 
 ```
-app/              File-based routing (One framework)
+app/              File-based routing (Expo Router)
 src/
   features/       Feature modules (auth, payments, theme)
   interface/      Reusable UI components
@@ -38,12 +39,12 @@ public/           Static web assets
 
 ## Stack
 
-- **Framework**: [One](https://onestack.dev) (universal React)
+- **Framework**: [Expo Router](https://docs.expo.dev/router/introduction/) (universal React)
 - **UI**: [Tamagui](https://tamagui.dev) (cross-platform components)
 - **Auth**: [Supabase](https://supabase.com) (email/password + Google OAuth)
 - **Payments**: [Stripe](https://stripe.com) (web) + react-native-iap (mobile)
 - **State**: [Zustand](https://zustand-demo.pmnd.rs)
-- **Build**: [Vite](https://vitejs.dev)
+- **Build**: [Metro](https://metrobundler.dev/) (Expo)
 
 ## Auth Setup
 

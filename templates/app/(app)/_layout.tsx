@@ -1,4 +1,4 @@
-import { Slot, usePathname, useRouter } from 'one';
+import { Slot, usePathname, useRouter } from 'expo-router';
 import { YStack, XStack, Button, Text } from 'tamagui';
 import { Home, User } from '@tamagui/lucide-icons';
 

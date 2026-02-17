@@ -1,4 +1,4 @@
-import { Slot } from 'one';
+import { Slot } from 'expo-router';
 import { useEffect } from 'react';
 import { TamaguiRootProvider } from '~/tamagui/TamaguiRootProvider';
 import { useAuth } from '~/features/auth/client/useAuth';

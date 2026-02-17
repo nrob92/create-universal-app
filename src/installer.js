@@ -10,14 +10,17 @@ export async function runInstaller(projectName) {
   try {
     await runCommand('bun', ['install'], projectDir);
     spinner.succeed(chalk.green('Dependencies installed!'));
+    return 'bun';
   } catch {
     spinner.text = 'bun not found, trying npm...';
     try {
       await runCommand('npm', ['install'], projectDir);
       spinner.succeed(chalk.green('Dependencies installed!'));
+      return 'npm';
     } catch (err) {
       spinner.fail('Install failed');
       console.error(chalk.yellow('  Run "bun install" or "npm install" manually.'));
+      return null;
     }
   }
 }
