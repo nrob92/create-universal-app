@@ -33,16 +33,45 @@ async function main() {
   const runCmd = pm === 'npm' ? 'npm run' : pm;
 
   const hasMobile = answers.platforms.includes('ios') || answers.platforms.includes('android');
+  const hasWeb = answers.platforms.includes('web');
 
-  console.log(chalk.bold.green('\n  Done! Next steps:\n'));
+  // ── 1. Get started ──────────────────────────────────────────────────
+  console.log(chalk.bold.green('\n  Done! Get started:\n'));
   console.log(chalk.white(`    cd ${answers.projectName}`));
   if (!answers.runInstall) {
     console.log(chalk.white(`    ${pm} install`));
   }
   console.log(chalk.white('    cp .env.example .env'));
-  console.log(chalk.white('    # Fill in your Supabase, Stripe & RevenueCat keys in .env'));
   console.log(chalk.white(`    ${runCmd} dev\n`));
 
+  // ── 2. Environment keys ─────────────────────────────────────────────
+  console.log(chalk.bold.yellow('  Fill in .env with your keys:\n'));
+  console.log(chalk.white('    EXPO_PUBLIC_SUPABASE_URL        ') + chalk.dim('supabase.com/dashboard → Project Settings → API'));
+  console.log(chalk.white('    EXPO_PUBLIC_SUPABASE_ANON_KEY   ') + chalk.dim('same page, under "anon public"'));
+  if (hasWeb) {
+    console.log(chalk.white('    EXPO_PUBLIC_STRIPE_PUBLIC_KEY   ') + chalk.dim('dashboard.stripe.com/apikeys'));
+    console.log(chalk.white('    STRIPE_SECRET_KEY               ') + chalk.dim('same page (secret key)'));
+  }
+  if (hasMobile) {
+    console.log(chalk.white('    EXPO_PUBLIC_REVENUECAT_IOS_KEY  ') + chalk.dim('app.revenuecat.com → API Keys'));
+    console.log(chalk.white('    EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ') + chalk.dim('same page'));
+  }
+  console.log('');
+
+  // ── 3. Supabase database ────────────────────────────────────────────
+  console.log(chalk.bold.yellow('  Supabase database setup:\n'));
+  console.log(chalk.white('    npx supabase login'));
+  console.log(chalk.white('    npx supabase link --project-ref <ref>'));
+  console.log(chalk.dim('      Find your ref at supabase.com/dashboard → Project Settings → General'));
+  console.log(chalk.white('    npx supabase db push'));
+  console.log(chalk.dim('      Creates profiles, plans & subscriptions tables with RLS policies'));
+  console.log('');
+  console.log(chalk.dim('    Then seed your plans table with at least one row:'));
+  console.log(chalk.dim('      INSERT INTO plans (name, slug, price_monthly, features)'));
+  console.log(chalk.dim("      VALUES ('Pro', 'pro', 9.99, '[\"Unlimited projects\", \"Priority support\"]');"));
+  console.log('');
+
+  // ── 4. Mobile setup (conditional) ───────────────────────────────────
   if (hasMobile) {
     console.log(chalk.bold.yellow('  Mobile setup (dev builds):\n'));
     console.log(chalk.white('    npx eas-cli login'));
@@ -51,6 +80,7 @@ async function main() {
     console.log(chalk.dim('    Install the build on your device, then run `npx expo start`\n'));
   }
 
+  // ── 5. Summary ──────────────────────────────────────────────────────
   const platformList = answers.platforms.join(', ');
   console.log(chalk.dim(`  Platforms: ${platformList}`));
   console.log(chalk.dim('  Framework: Expo Router + Tamagui'));

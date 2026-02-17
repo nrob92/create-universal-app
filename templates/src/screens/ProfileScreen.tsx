@@ -1,6 +1,5 @@
 import { YStack, H2, Paragraph, Avatar, Separator } from 'tamagui';
 import { useAuth } from '~/features/auth/client/useAuth';
-import { signOut } from '~/features/auth/auth';
 import { usePayments } from '~/features/payments/usePayments';
 import { useRouter } from 'expo-router';
 import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
@@ -10,11 +9,6 @@ export function ProfileScreen() {
   const { user } = useAuth();
   const { isPro } = usePayments();
   const router = useRouter();
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
-  };
 
   return (
     <PageContainer>
@@ -31,14 +25,10 @@ export function ProfileScreen() {
         <Separator width="100%" />
 
         {!isPro && (
-          <PrimaryButton width="100%">
+          <PrimaryButton width="100%" onPress={() => router.push('/home/paywall')}>
             Upgrade to Pro
           </PrimaryButton>
         )}
-
-        <PrimaryButton theme="red" width="100%" onPress={handleSignOut}>
-          Sign Out
-        </PrimaryButton>
       </YStack>
     </PageContainer>
   );

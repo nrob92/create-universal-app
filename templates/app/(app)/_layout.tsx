@@ -1,6 +1,6 @@
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { YStack, XStack, Button, Text } from 'tamagui';
-import { Home, User } from '@tamagui/lucide-icons';
+import { Home, User, Settings } from '@tamagui/lucide-icons';
 
 export default function AppLayout() {
   const pathname = usePathname();
@@ -38,6 +38,17 @@ export default function AppLayout() {
           <YStack alignItems="center" gap="$1">
             <User size={20} />
             <Text fontSize="$1">Profile</Text>
+          </YStack>
+        </Button>
+
+        <Button
+          chromeless
+          onPress={() => router.push('/home/settings')}
+          opacity={pathname.startsWith('/home/settings') ? 1 : 0.5}
+        >
+          <YStack alignItems="center" gap="$1">
+            <Settings size={20} />
+            <Text fontSize="$1">Settings</Text>
           </YStack>
         </Button>
       </XStack>
