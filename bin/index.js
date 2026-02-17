@@ -32,6 +32,8 @@ async function main() {
 
   const runCmd = pm === 'npm' ? 'npm run' : pm;
 
+  const hasMobile = answers.platforms.includes('ios') || answers.platforms.includes('android');
+
   console.log(chalk.bold.green('\n  Done! Next steps:\n'));
   console.log(chalk.white(`    cd ${answers.projectName}`));
   if (!answers.runInstall) {
@@ -40,6 +42,14 @@ async function main() {
   console.log(chalk.white('    cp .env.example .env'));
   console.log(chalk.white('    # Fill in your Supabase & Stripe keys in .env'));
   console.log(chalk.white(`    ${runCmd} dev\n`));
+
+  if (hasMobile) {
+    console.log(chalk.bold.yellow('  Mobile setup (dev builds):\n'));
+    console.log(chalk.white('    npx eas-cli login'));
+    console.log(chalk.white('    npx eas-cli build --profile development --platform ios'));
+    console.log(chalk.white('    npx eas-cli build --profile development --platform android'));
+    console.log(chalk.dim('    Install the build on your device, then run `npx expo start`\n'));
+  }
 
   const platformList = answers.platforms.join(', ');
   console.log(chalk.dim(`  Platforms: ${platformList}`));

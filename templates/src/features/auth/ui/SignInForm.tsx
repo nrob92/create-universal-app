@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { YStack, H2, Input, Paragraph, XStack, Separator } from 'tamagui';
-import { useRouter } from 'one';
+import { useRouter } from 'expo-router';
 import { signIn, signInWithGoogle } from '~/features/auth/auth';
 import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
 import { PageContainer } from '~/interface/layout/PageContainer';

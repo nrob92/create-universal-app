@@ -2,7 +2,7 @@ import { YStack, H2, Paragraph, Avatar, Separator } from 'tamagui';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { signOut } from '~/features/auth/auth';
 import { usePayments } from '~/features/payments/usePayments';
-import { useRouter } from 'one';
+import { useRouter } from 'expo-router';
 import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
 import { PageContainer } from '~/interface/layout/PageContainer';
 

@@ -88,6 +88,11 @@ export async function generateProject({ projectName, platforms }) {
   await generateMetroConfig(projectDir);
   await generateAppConfig(projectDir, projectName, platforms);
   await generateTsConfig(projectDir);
+
+  // Generate EAS config for mobile
+  if (hasMobile) {
+    await generateEasJson(projectDir);
+  }
 }
 
 async function generatePackageJson(projectDir, projectName, platforms) {
@@ -109,6 +114,8 @@ async function generatePackageJson(projectDir, projectName, platforms) {
     '@tamagui/lucide-icons': '^1.116.0',
     'zustand': '^5.0.0',
     '@supabase/supabase-js': '^2.49.0',
+    'react-native-reanimated': '~3.16.0',
+    'react-native-gesture-handler': '~2.20.0',
   };
 
   if (hasWeb) {
@@ -148,6 +155,7 @@ async function generatePackageJson(projectDir, projectName, platforms) {
     name: projectName,
     version: '0.1.0',
     private: true,
+    main: 'expo-router/entry',
     scripts,
     dependencies: deps,
     devDependencies: devDeps,
@@ -251,4 +259,27 @@ async function generateTsConfig(projectDir) {
   };
 
   await fs.writeJson(path.join(projectDir, 'tsconfig.json'), config, { spaces: 2 });
+}
+
+async function generateEasJson(projectDir) {
+  const config = {
+    cli: {
+      version: '>= 13.0.0',
+    },
+    build: {
+      development: {
+        developmentClient: true,
+        distribution: 'internal',
+      },
+      preview: {
+        distribution: 'internal',
+      },
+      production: {},
+    },
+    submit: {
+      production: {},
+    },
+  };
+
+  await fs.writeJson(path.join(projectDir, 'eas.json'), config, { spaces: 2 });
 }

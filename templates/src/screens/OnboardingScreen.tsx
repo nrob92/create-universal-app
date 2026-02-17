@@ -1,5 +1,5 @@
 import { YStack, H1, Paragraph, XStack } from 'tamagui';
-import { useRouter } from 'one';
+import { useRouter } from 'expo-router';
 import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
 import { PageContainer } from '~/interface/layout/PageContainer';
 
