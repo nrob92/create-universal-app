@@ -4,30 +4,22 @@ import chalk from 'chalk';
 
 export async function runInstaller(projectName) {
   const projectDir = path.resolve(process.cwd(), projectName);
-  const { default: ora } = await import('ora');
-  const spinner = ora('Installing dependencies...').start();
 
+  console.log(chalk.cyan('\n  📦 Installing dependencies...\n'));
   try {
-    await runCommand('bun', ['install'], projectDir);
-    spinner.succeed(chalk.green('Dependencies installed!'));
-    return 'bun';
-  } catch {
-    spinner.text = 'bun not found, trying npm...';
-    try {
-      await runCommand('npm', ['install'], projectDir);
-      spinner.succeed(chalk.green('Dependencies installed!'));
-      return 'npm';
-    } catch (err) {
-      spinner.fail('Install failed');
-      console.error(chalk.yellow('  Run "bun install" or "npm install" manually.'));
-      return null;
-    }
+    await runCommand('npm', ['install'], projectDir);
+    console.log(chalk.green('\n  ✅ Dependencies installed!\n'));
+    return 'npm';
+  } catch (err) {
+    console.error(chalk.red('\n  ✖ Install failed'));
+    console.error(chalk.yellow('  Run "npm install" manually in the project directory.\n'));
+    return null;
   }
 }
 
 function runCommand(cmd, args, cwd) {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { cwd, stdio: 'pipe', shell: true });
+    const child = spawn(cmd, args, { cwd, stdio: 'inherit', shell: true });
     child.on('close', (code) => {
       if (code === 0) resolve();
       else reject(new Error(`${cmd} exited with code ${code}`));

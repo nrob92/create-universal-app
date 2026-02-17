@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { getTemplatesDir } from './utils.js';
 
-export async function generateProject({ projectName, platforms }) {
+export async function generateProject({ projectName, platforms, supabaseProjectRef }) {
   const projectDir = path.resolve(process.cwd(), projectName);
   const templatesDir = getTemplatesDir();
 
@@ -60,6 +60,14 @@ export async function generateProject({ projectName, platforms }) {
     if (await fs.pathExists(src)) {
       await fs.copy(src, dest);
     }
+  }
+
+  // Set project_id in supabase config.toml
+  const configTomlPath = path.join(projectDir, 'supabase/config.toml');
+  if (await fs.pathExists(configTomlPath)) {
+    let configToml = await fs.readFile(configTomlPath, 'utf-8');
+    configToml = configToml.replace('project_id = ""', `project_id = "${supabaseProjectRef || projectName}"`);
+    await fs.writeFile(configTomlPath, configToml);
   }
 
   // Conditional: Stripe web payments
@@ -178,28 +186,32 @@ async function generatePackageJson(projectDir, projectName, platforms) {
 
   const deps = {
     'expo': '~54.0.0',
-    'expo-router': '^6.0.0',
-    'react': '^19.2.0',
-    'react-native': '0.84.0',
+    'expo-router': '~6.0.0',
+    'react': '19.1.0',
+    'react-native': '0.81.5',
     'react-native-web': '^0.21.0',
-    'react-dom': '^19.2.0',
+    'react-dom': '19.1.0',
     'react-native-safe-area-context': '^5.6.0',
-    'react-native-screens': '~4.23.0',
+    'react-native-screens': '~4.16.0',
     'tamagui': '^2.0.0-rc.14',
     '@tamagui/config': '^2.0.0-rc.14',
     '@tamagui/core': '^2.0.0-rc.14',
     '@tamagui/lucide-icons': '^2.0.0-rc.14',
     'zustand': '^5.0.0',
     '@supabase/supabase-js': '^2.96.0',
-    'react-native-reanimated': '^4.2.0',
-    'react-native-gesture-handler': '^2.30.0',
+    'react-native-reanimated': '~4.1.1',
+    'react-native-gesture-handler': '~2.28.0',
     '@react-native-async-storage/async-storage': '^2.2.0',
     '@tanstack/react-query': '^5.90.0',
+    'react-native-svg': '15.12.1',
+    'expo-constants': '~18.0.0',
+    'expo-linking': '~8.0.0',
+    'react-native-worklets': '0.5.1',
   };
 
   if (hasWeb) {
-    deps['@stripe/stripe-js'] = '^8.7.0';
-    deps['@stripe/react-stripe-js'] = '^3.1.0';
+    deps['@stripe/stripe-js'] = '^3.0.0';
+    deps['@stripe/react-stripe-js'] = '^3.0.0';
     deps['@expo/metro-runtime'] = '~6.1.0';
   }
 
@@ -210,25 +222,25 @@ async function generatePackageJson(projectDir, projectName, platforms) {
 
   const devDeps = {
     'typescript': '^5.6.0',
-    '@types/react': '^19.0.0',
+    '@types/react': '~19.1.10',
     '@babel/core': '^7.25.0',
     '@tamagui/babel-plugin': '^2.0.0-rc.14',
   };
 
   const scripts = {
-    'dev': 'npx expo start',
-    'build:web': 'npx expo export --platform web',
-    'start': 'npx expo start',
+    'dev': 'expo start',
+    'build:web': 'expo export --platform web',
+    'start': 'expo start',
   };
 
   if (platforms.includes('ios')) {
-    scripts['ios'] = 'npx expo start --ios';
+    scripts['ios'] = 'expo start --ios';
   }
   if (platforms.includes('android')) {
-    scripts['android'] = 'npx expo start --android';
+    scripts['android'] = 'expo start --android';
   }
   if (hasWeb) {
-    scripts['web'] = 'npx expo start --web';
+    scripts['web'] = 'expo start --web';
   }
 
   const pkg = {
@@ -286,6 +298,9 @@ async function generateAppConfig(projectDir, projectName, platforms) {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.yourcompany.${slug.replace(/-/g, '')}',
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },`;
   }
 
@@ -312,6 +327,7 @@ const config: ExpoConfig = {
     output: 'single',
   },${platformBlocks}
   plugins: ['expo-router'],
+  extra: {},
 };
 
 export default config;
@@ -344,17 +360,37 @@ async function generateTsConfig(projectDir) {
 async function generateEasJson(projectDir) {
   const config = {
     cli: {
-      version: '>= 13.0.0',
+      version: '>= 5.0.0',
+      appVersionSource: 'remote',
     },
     build: {
       development: {
         developmentClient: true,
         distribution: 'internal',
+        ios: {
+          image: 'macos-sequoia-15.6-xcode-16.4',
+        },
+        android: {
+          image: 'latest',
+        },
       },
       preview: {
         distribution: 'internal',
+        ios: {
+          image: 'macos-sequoia-15.6-xcode-16.4',
+        },
+        android: {
+          image: 'latest',
+        },
       },
-      production: {},
+      production: {
+        ios: {
+          image: 'macos-sequoia-15.6-xcode-16.4',
+        },
+        android: {
+          image: 'latest',
+        },
+      },
     },
     submit: {
       production: {},

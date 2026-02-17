@@ -3,20 +3,64 @@
 import { runPrompts } from '../src/prompts.js';
 import { generateProject } from '../src/generator.js';
 import { runInstaller } from '../src/installer.js';
+import { setupSupabase, createSupabaseProject } from '../src/supabase.js';
+import { setupEas } from '../src/eas.js';
 import chalk from 'chalk';
+import path from 'path';
+import fs from 'fs-extra';
 
 async function main() {
   console.log(chalk.bold.cyan('\n  ✦ Universal App Generator\n'));
   console.log(chalk.dim('  Scaffold cross-platform apps with Expo Router, Tamagui, Supabase & Stripe\n'));
 
+  // ── Step 1: Get all project details ─────────────────────────────────────
   const answers = await runPrompts();
 
+  const hasMobile = answers.platforms.includes('ios') || answers.platforms.includes('android');
+  const hasWeb = answers.platforms.includes('web');
+
+  // ── Step 2: Supabase setup FIRST ──────────────────────────────────────
+  let supabaseSetupSuccess = false;
+  let supabaseKeys = null;
+  let supabaseProjectRef = answers.supabaseProjectRef;
+
+  if (answers.supabaseOption === 'new' && answers.newProjectDetails) {
+    console.log(chalk.bold.cyan('\n  ═══ Setting up Supabase FIRST ═══\n'));
+    
+    // Create Supabase project BEFORE scaffolding
+    const createResult = await createSupabaseProject(
+      answers.newProjectDetails.supabaseProjectName || answers.projectName,
+      answers.newProjectDetails.orgId,
+      answers.newProjectDetails.dbPassword,
+      answers.newProjectDetails.region
+    );
+
+    if (!createResult.success) {
+      console.log(chalk.red('\n  Failed to create Supabase project. Please try again or select "Link to existing".\n'));
+      process.exit(1);
+    }
+
+    if (createResult.projectRef) {
+      supabaseProjectRef = createResult.projectRef;
+      console.log(chalk.green(`  ✅ Supabase project created: ${supabaseProjectRef}\n`));
+    } else {
+      console.log(chalk.yellow('\n  Could not get project ref. Please enter it manually.\n'));
+      process.exit(1);
+    }
+  }
+
+  // ── Step 3: Scaffold project ───────────────────────────────────────────
   console.log('');
   const { default: ora } = await import('ora');
   const spinner = ora('Scaffolding project...').start();
 
   try {
-    await generateProject(answers);
+    // Pass Supabase details to generator for .env file
+    await generateProject({
+      ...answers,
+      supabaseProjectRef,
+      supabaseKeys
+    });
     spinner.succeed(chalk.green('Project scaffolded successfully!'));
   } catch (err) {
     spinner.fail('Failed to scaffold project');
@@ -24,30 +68,73 @@ async function main() {
     process.exit(1);
   }
 
-  let pm = 'bun';
-  if (answers.runInstall) {
-    const usedPm = await runInstaller(answers.projectName);
-    if (usedPm) pm = usedPm;
+  const projectDir = path.resolve(process.cwd(), answers.projectName);
+
+  // ── Step 4: Link Supabase and push schema ───────────────────────────────
+  if (answers.supabaseOption !== 'skip' && supabaseProjectRef) {
+    console.log(chalk.bold.cyan('\n  ═══ Linking Supabase ═══\n'));
+    
+    // Link the project
+    const linkResult = await setupSupabase(
+      projectDir,
+      'existing', // Use existing since we have the ref
+      supabaseProjectRef,
+      answers.projectName
+    );
+    
+    supabaseSetupSuccess = linkResult.success;
+    supabaseKeys = linkResult.keys;
+
+    // Auto-write .env with actual Supabase keys
+    if (supabaseKeys) {
+      const envExamplePath = path.join(projectDir, '.env.example');
+      const envPath = path.join(projectDir, '.env');
+      if (await fs.pathExists(envExamplePath)) {
+        let envContent = await fs.readFile(envExamplePath, 'utf-8');
+        envContent = envContent.replace('https://your-project.supabase.co', supabaseKeys.url);
+        envContent = envContent.replace('your-anon-key', supabaseKeys.anonKey);
+        await fs.writeFile(envPath, envContent);
+      }
+    }
   }
 
-  const runCmd = pm === 'npm' ? 'npm run' : pm;
+  // ── Step 5: Install dependencies ────────────────────────────────────────
+  let installSuccess = false;
+  if (answers.runInstall) {
+    const result = await runInstaller(answers.projectName);
+    installSuccess = result !== null;
+  }
 
-  const hasMobile = answers.platforms.includes('ios') || answers.platforms.includes('android');
-  const hasWeb = answers.platforms.includes('web');
+  const runCmd = 'npm run';
 
-  // ── 1. Get started ──────────────────────────────────────────────────
-  console.log(chalk.bold.green('\n  Done! Get started:\n'));
+  // ── Step 6: Final instructions ─────────────────────────────────────────
+  console.log(chalk.bold.green('\n  ✅ All done!\n'));
+
+  if (supabaseSetupSuccess && supabaseKeys) {
+    console.log(chalk.white('    EXPO_PUBLIC_SUPABASE_URL        ') + chalk.cyan(supabaseKeys.url));
+    console.log(chalk.white('    EXPO_PUBLIC_SUPABASE_ANON_KEY   ') + chalk.dim(supabaseKeys.anonKey.substring(0, 20) + '...'));
+    console.log('');
+  }
+
+  console.log(chalk.bold.green('  Get started:\n'));
   console.log(chalk.white(`    cd ${answers.projectName}`));
   if (!answers.runInstall) {
-    console.log(chalk.white(`    ${pm} install`));
+    console.log(chalk.white('    npm install'));
   }
-  console.log(chalk.white('    cp .env.example .env'));
+  if (supabaseSetupSuccess && supabaseKeys) {
+    console.log(chalk.dim('    .env created with Supabase keys — add remaining keys below'));
+  } else {
+    console.log(chalk.white('    cp .env.example .env'));
+  }
   console.log(chalk.white(`    ${runCmd} dev\n`));
 
-  // ── 2. Environment keys ─────────────────────────────────────────────
-  console.log(chalk.bold.yellow('  Fill in .env with your keys:\n'));
-  console.log(chalk.white('    EXPO_PUBLIC_SUPABASE_URL        ') + chalk.dim('supabase.com/dashboard → Project Settings → API'));
-  console.log(chalk.white('    EXPO_PUBLIC_SUPABASE_ANON_KEY   ') + chalk.dim('same page, under "anon public"'));
+  // Show remaining env keys if needed
+  if (!supabaseSetupSuccess || !supabaseKeys) {
+    console.log(chalk.bold.yellow('  Fill in .env with your keys:\n'));
+    console.log(chalk.white('    EXPO_PUBLIC_SUPABASE_URL        ') + chalk.dim('supabase.com/dashboard → Project Settings → API'));
+    console.log(chalk.white('    EXPO_PUBLIC_SUPABASE_ANON_KEY   ') + chalk.dim('same page, under "anon public"'));
+  }
+  
   if (hasWeb) {
     console.log(chalk.white('    EXPO_PUBLIC_STRIPE_PUBLIC_KEY   ') + chalk.dim('dashboard.stripe.com/apikeys'));
     console.log(chalk.white('    STRIPE_SECRET_KEY               ') + chalk.dim('same page (secret key)'));
@@ -58,29 +145,36 @@ async function main() {
   }
   console.log('');
 
-  // ── 3. Supabase database ────────────────────────────────────────────
-  console.log(chalk.bold.yellow('  Supabase database setup:\n'));
-  console.log(chalk.white('    npx supabase login'));
-  console.log(chalk.white('    npx supabase link --project-ref <ref>'));
-  console.log(chalk.dim('      Find your ref at supabase.com/dashboard → Project Settings → General'));
-  console.log(chalk.white('    npx supabase db push'));
-  console.log(chalk.dim('      Creates profiles, plans & subscriptions tables with RLS policies'));
-  console.log('');
-  console.log(chalk.dim('    Then seed your plans table with at least one row:'));
-  console.log(chalk.dim('      INSERT INTO plans (name, slug, price_monthly, features)'));
-  console.log(chalk.dim("      VALUES ('Pro', 'pro', 9.99, '[\"Unlimited projects\", \"Priority support\"]');"));
-  console.log('');
-
-  // ── 4. Mobile setup (conditional) ───────────────────────────────────
-  if (hasMobile) {
-    console.log(chalk.bold.yellow('  Mobile setup (dev builds):\n'));
-    console.log(chalk.white('    npx eas-cli login'));
-    console.log(chalk.white('    npx eas-cli build --profile development --platform ios'));
-    console.log(chalk.white('    npx eas-cli build --profile development --platform android'));
-    console.log(chalk.dim('    Install the build on your device, then run `npx expo start`\n'));
+  // Seed instructions
+  if (supabaseSetupSuccess) {
+    console.log(chalk.dim('    Seed your plans table:'));
+    console.log(chalk.dim('      INSERT INTO plans (name, slug, price_monthly, features)'));
+    console.log(chalk.dim("      VALUES ('Pro', 'pro', 9.99, '[\\\"Unlimited projects\\\", \\\"Priority support\\\"]');"));
+    console.log('');
   }
 
-  // ── 5. Summary ──────────────────────────────────────────────────────
+  // ── Step 7: EAS setup (last) ───────────────────────────────────────────
+  if (hasMobile && answers.easOption !== 'skip' && installSuccess) {
+    const easResult = await setupEas(projectDir, answers.platforms);
+    
+    if (!easResult.success) {
+      console.log(chalk.yellow('  Note: EAS setup requires additional steps.\n'));
+    }
+  } else if (hasMobile && answers.easOption !== 'skip' && !installSuccess) {
+    console.log(chalk.yellow('  ⚠️  EAS setup skipped because dependencies failed to install.'));
+    console.log(chalk.yellow('  Run "npm install" first, then:\n'));
+    console.log(chalk.white('    npx eas-cli init'));
+    console.log(chalk.white('    npx eas-cli credentials --platform ios'));
+    console.log(chalk.white('    npx eas-cli build --profile development --platform ios\n'));
+  } else if (hasMobile && answers.easOption === 'skip') {
+    console.log(chalk.dim('  EAS setup skipped. Run these commands when ready:\n'));
+    console.log(chalk.white('    npx eas-cli login'));
+    console.log(chalk.white('    npx eas-cli project:init'));
+    console.log(chalk.white('    npx eas-cli build --profile development --platform ios'));
+    console.log(chalk.white('    npx eas-cli build --profile development --platform android\n'));
+  }
+
+  // Summary
   const platformList = answers.platforms.join(', ');
   console.log(chalk.dim(`  Platforms: ${platformList}`));
   console.log(chalk.dim('  Framework: Expo Router + Tamagui'));
@@ -88,6 +182,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err);
+  console.error(chalk.red(err.message));
   process.exit(1);
 });
