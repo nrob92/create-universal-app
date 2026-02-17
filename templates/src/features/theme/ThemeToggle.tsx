@@ -1,20 +1,17 @@
-import { Button, useThemeName } from 'tamagui';
+import { Button } from 'tamagui';
 import { Sun, Moon } from '@tamagui/lucide-icons';
+import { useTheme } from '~/tamagui/TamaguiRootProvider';
 
-interface ThemeToggleProps {
-  onToggle: (theme: 'light' | 'dark') => void;
-}
-
-export function ThemeToggle({ onToggle }: ThemeToggleProps) {
-  const themeName = useThemeName();
-  const isDark = themeName === 'dark';
+export function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   return (
     <Button
       chromeless
       circular
       icon={isDark ? Sun : Moon}
-      onPress={() => onToggle(isDark ? 'light' : 'dark')}
+      onPress={toggleTheme}
     />
   );
 }

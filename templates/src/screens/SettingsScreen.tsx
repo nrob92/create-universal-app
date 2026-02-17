@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
 import { PageContainer } from '~/interface/layout/PageContainer';
 import { Spinner } from '~/interface/feedback/Spinner';
+import { ThemeToggle } from '~/features/theme/ThemeToggle';
 
 interface Profile {
   display_name: string | null;
@@ -126,6 +127,14 @@ export function SettingsScreen() {
               </PrimaryButton>
             )}
           </YStack>
+        </Card>
+
+        {/* Appearance */}
+        <Card elevate bordered padding="$4" borderRadius="$4">
+          <XStack justifyContent="space-between" alignItems="center">
+            <Paragraph fontWeight="bold" fontSize="$5">Appearance</Paragraph>
+            <ThemeToggle />
+          </XStack>
         </Card>
 
         <Separator />

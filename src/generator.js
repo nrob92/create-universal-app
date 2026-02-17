@@ -26,6 +26,7 @@ export async function generateProject({ projectName, platforms }) {
     'app/(app)/home/settings.tsx',
     'app/(app)/auth/sign-in.tsx',
     'app/(app)/auth/sign-up.tsx',
+    'app/(app)/auth/callback.tsx',
     'src/features/auth/client/supabaseClient.ts',
     'src/features/auth/auth.ts',
     'src/features/auth/client/useAuth.ts',
@@ -47,8 +48,6 @@ export async function generateProject({ projectName, platforms }) {
     'src/screens/ProfileScreen.tsx',
     'src/screens/PaywallScreen.tsx',
     'src/screens/SettingsScreen.tsx',
-    'src/constants/env.ts',
-    '.env.example',
     '.gitignore',
     'README.md',
     'supabase/config.toml',
@@ -98,11 +97,79 @@ export async function generateProject({ projectName, platforms }) {
   await generateMetroConfig(projectDir);
   await generateAppConfig(projectDir, projectName, platforms);
   await generateTsConfig(projectDir);
+  await generateEnvFiles(projectDir, platforms);
 
   // Generate EAS config for mobile
   if (hasMobile) {
     await generateEasJson(projectDir);
   }
+}
+
+async function generateEnvFiles(projectDir, platforms) {
+  const hasMobile = platforms.includes('ios') || platforms.includes('android');
+  const hasWeb = platforms.includes('web');
+
+  // Generate .env.example
+  const envLines = [
+    'EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co',
+    'EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key',
+  ];
+
+  if (hasWeb) {
+    envLines.push('EXPO_PUBLIC_STRIPE_PUBLIC_KEY=pk_test_...');
+    envLines.push('STRIPE_SECRET_KEY=sk_test_...');
+  }
+
+  if (hasMobile) {
+    envLines.push('EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_...');
+    envLines.push('EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_...');
+  }
+
+  await fs.writeFile(
+    path.join(projectDir, '.env.example'),
+    envLines.join('\n') + '\n'
+  );
+
+  // Generate src/constants/env.ts
+  const envEntries = [
+    `  SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL ?? '',`,
+    `  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',`,
+  ];
+
+  if (hasWeb) {
+    envEntries.push(`  STRIPE_PUBLIC_KEY: process.env.EXPO_PUBLIC_STRIPE_PUBLIC_KEY ?? '',`);
+    envEntries.push(`  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ?? '',`);
+  }
+
+  if (hasMobile) {
+    envEntries.push(`  REVENUECAT_IOS_KEY: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '',`);
+    envEntries.push(`  REVENUECAT_ANDROID_KEY: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '',`);
+  }
+
+  const requiredKeys = [`'SUPABASE_URL'`, `'SUPABASE_ANON_KEY'`];
+  if (hasWeb) {
+    requiredKeys.push(`'STRIPE_PUBLIC_KEY'`);
+  }
+
+  const envContent = `export const ENV = {
+${envEntries.join('\n')}
+} as const;
+
+const REQUIRED_KEYS: (keyof typeof ENV)[] = [${requiredKeys.join(', ')}];
+
+export function validateEnv() {
+  const missing = REQUIRED_KEYS.filter((key) => !ENV[key]);
+  if (missing.length > 0) {
+    console.warn(
+      '[env] Missing required environment variables: ' + missing.join(', ') +
+      '\\nCopy .env.example to .env and fill in your keys.'
+    );
+  }
+}
+`;
+
+  await fs.ensureDir(path.join(projectDir, 'src/constants'));
+  await fs.writeFile(path.join(projectDir, 'src/constants/env.ts'), envContent);
 }
 
 async function generatePackageJson(projectDir, projectName, platforms) {

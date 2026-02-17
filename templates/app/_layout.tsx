@@ -1,7 +1,42 @@
-import { Slot } from 'expo-router';
-import { useEffect } from 'react';
+import { Slot, useRouter, useSegments } from 'expo-router';
+import { useEffect, type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TamaguiRootProvider } from '~/tamagui/TamaguiRootProvider';
 import { useAuth } from '~/features/auth/client/useAuth';
+import { ErrorBoundary } from '~/interface/feedback/ErrorBoundary';
+import { Spinner } from '~/interface/feedback/Spinner';
+import { validateEnv } from '~/constants/env';
+
+validateEnv();
+
+const queryClient = new QueryClient();
+
+function AuthGuard({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === '(app)' && segments[1] === 'auth';
+    const inHomeGroup = segments[0] === '(app)' && segments[1] === 'home';
+
+    if (!user && inHomeGroup) {
+      // Not signed in but trying to access protected routes
+      router.replace('/');
+    } else if (user && (segments.length === 0 || inAuthGroup)) {
+      // Signed in but on onboarding or auth screens
+      router.replace('/home/feed');
+    }
+  }, [user, loading, segments]);
+
+  if (loading) {
+    return <Spinner label="Loading..." />;
+  }
+
+  return <>{children}</>;
+}
 
 export default function RootLayout() {
   const initialize = useAuth((s) => s.initialize);
@@ -11,8 +46,14 @@ export default function RootLayout() {
   }, [initialize]);
 
   return (
-    <TamaguiRootProvider>
-      <Slot />
-    </TamaguiRootProvider>
+    <QueryClientProvider client={queryClient}>
+      <TamaguiRootProvider>
+        <ErrorBoundary>
+          <AuthGuard>
+            <Slot />
+          </AuthGuard>
+        </ErrorBoundary>
+      </TamaguiRootProvider>
+    </QueryClientProvider>
   );
 }
