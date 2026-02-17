@@ -40,7 +40,7 @@ async function main() {
     console.log(chalk.white(`    ${pm} install`));
   }
   console.log(chalk.white('    cp .env.example .env'));
-  console.log(chalk.white('    # Fill in your Supabase & Stripe keys in .env'));
+  console.log(chalk.white('    # Fill in your Supabase, Stripe & RevenueCat keys in .env'));
   console.log(chalk.white(`    ${runCmd} dev\n`));
 
   if (hasMobile) {
@@ -54,7 +54,7 @@ async function main() {
   const platformList = answers.platforms.join(', ');
   console.log(chalk.dim(`  Platforms: ${platformList}`));
   console.log(chalk.dim('  Framework: Expo Router + Tamagui'));
-  console.log(chalk.dim('  Auth: Supabase | Payments: Stripe + IAP\n'));
+  console.log(chalk.dim('  Auth: Supabase | Payments: Stripe (web) + RevenueCat (mobile)\n'));
 }
 
 main().catch((err) => {

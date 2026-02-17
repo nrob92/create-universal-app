@@ -1,4 +1,4 @@
-import { config } from '@tamagui/config/v3';
+import { config } from '@tamagui/config/v5';
 import { createTamagui } from 'tamagui';
 
 const tamaguiConfig = createTamagui(config);

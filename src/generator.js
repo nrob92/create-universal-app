@@ -61,11 +61,11 @@ export async function generateProject({ projectName, platforms }) {
     );
   }
 
-  // Conditional: Mobile IAP
+  // Conditional: Mobile payments (RevenueCat)
   if (hasMobile) {
     await fs.copy(
-      path.join(templatesDir, 'src/features/payments/expoIAP.ts'),
-      path.join(projectDir, 'src/features/payments/expoIAP.ts')
+      path.join(templatesDir, 'src/features/payments/revenueCat.ts'),
+      path.join(projectDir, 'src/features/payments/revenueCat.ts')
     );
   }
 
@@ -100,39 +100,42 @@ async function generatePackageJson(projectDir, projectName, platforms) {
   const hasWeb = platforms.includes('web');
 
   const deps = {
-    'expo': '~52.0.0',
-    'expo-router': '~4.0.0',
-    'react': '^18.3.0',
-    'react-native': '^0.76.0',
-    'react-native-web': '^0.19.0',
-    'react-dom': '^18.3.0',
-    'react-native-safe-area-context': '^4.12.0',
-    'react-native-screens': '~4.4.0',
-    'tamagui': '^1.116.0',
-    '@tamagui/config': '^1.116.0',
-    '@tamagui/core': '^1.116.0',
-    '@tamagui/lucide-icons': '^1.116.0',
+    'expo': '~54.0.0',
+    'expo-router': '^6.0.0',
+    'react': '^19.2.0',
+    'react-native': '0.84.0',
+    'react-native-web': '^0.21.0',
+    'react-dom': '^19.2.0',
+    'react-native-safe-area-context': '^5.6.0',
+    'react-native-screens': '~4.23.0',
+    'tamagui': '^2.0.0-rc.14',
+    '@tamagui/config': '^2.0.0-rc.14',
+    '@tamagui/core': '^2.0.0-rc.14',
+    '@tamagui/lucide-icons': '^2.0.0-rc.14',
     'zustand': '^5.0.0',
-    '@supabase/supabase-js': '^2.49.0',
-    'react-native-reanimated': '~3.16.0',
-    'react-native-gesture-handler': '~2.20.0',
+    '@supabase/supabase-js': '^2.96.0',
+    'react-native-reanimated': '^4.2.0',
+    'react-native-gesture-handler': '^2.30.0',
+    '@react-native-async-storage/async-storage': '^2.2.0',
+    '@tanstack/react-query': '^5.90.0',
   };
 
   if (hasWeb) {
-    deps['@stripe/stripe-js'] = '^2.4.0';
-    deps['@expo/metro-runtime'] = '~4.0.0';
+    deps['@stripe/stripe-js'] = '^8.7.0';
+    deps['@stripe/react-stripe-js'] = '^3.1.0';
+    deps['@expo/metro-runtime'] = '~6.1.0';
   }
 
   if (hasMobile) {
-    deps['react-native-iap'] = '^14.0.0';
-    deps['expo-dev-client'] = '~5.0.0';
+    deps['react-native-purchases'] = '^9.10.0';
+    deps['expo-dev-client'] = '~6.0.0';
   }
 
   const devDeps = {
     'typescript': '^5.6.0',
-    '@types/react': '^18.3.0',
+    '@types/react': '^19.0.0',
     '@babel/core': '^7.25.0',
-    '@tamagui/babel-plugin': '^1.116.0',
+    '@tamagui/babel-plugin': '^2.0.0-rc.14',
   };
 
   const scripts = {
