@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm view:*)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:newreleases.io)"
+      "WebFetch(domain:newreleases.io)",
+      "Bash(node -e:*)",
+      "WebFetch(domain:tamagui.dev)"
     ]
   }
 }

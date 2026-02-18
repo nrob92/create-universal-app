@@ -111,6 +111,13 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
   if (hasMobile) {
     await generateEasJson(projectDir);
   }
+
+  // Create .npmrc to configure npm behavior on EAS builds
+  // legacy-peer-deps avoids peer dependency conflicts
+  await fs.writeFile(
+    path.join(projectDir, '.npmrc'),
+    'legacy-peer-deps=true\n'
+  );
 }
 
 async function generateEnvFiles(projectDir, platforms) {
@@ -197,6 +204,11 @@ async function generatePackageJson(projectDir, projectName, platforms) {
     '@tamagui/config': '^2.0.0-rc.14',
     '@tamagui/core': '^2.0.0-rc.14',
     '@tamagui/lucide-icons': '^2.0.0-rc.14',
+    '@tamagui/native': '^2.0.0-rc.14',
+    'zeego': '^3.0.6',
+    'react-native-ios-context-menu': '3.1.0',
+    'react-native-ios-utilities': '5.1.2',
+    '@react-native-menu/menu': '1.2.2',
     'zustand': '^5.0.0',
     '@supabase/supabase-js': '^2.96.0',
     'react-native-reanimated': '~4.1.1',
@@ -206,7 +218,6 @@ async function generatePackageJson(projectDir, projectName, platforms) {
     'react-native-svg': '15.12.1',
     'expo-constants': '~18.0.0',
     'expo-linking': '~8.0.0',
-    'react-native-worklets': '0.5.1',
   };
 
   if (hasWeb) {
@@ -373,6 +384,9 @@ async function generateEasJson(projectDir) {
         android: {
           image: 'latest',
         },
+        env: {
+          NPM_CONFIG_LEGACY_PEER_DEPS: 'true',
+        },
       },
       preview: {
         distribution: 'internal',
@@ -382,6 +396,9 @@ async function generateEasJson(projectDir) {
         android: {
           image: 'latest',
         },
+        env: {
+          NPM_CONFIG_LEGACY_PEER_DEPS: 'true',
+        },
       },
       production: {
         ios: {
@@ -389,6 +406,9 @@ async function generateEasJson(projectDir) {
         },
         android: {
           image: 'latest',
+        },
+        env: {
+          NPM_CONFIG_LEGACY_PEER_DEPS: 'true',
         },
       },
     },

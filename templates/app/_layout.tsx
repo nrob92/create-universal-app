@@ -1,3 +1,4 @@
+import '@tamagui/native/setup-zeego';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
