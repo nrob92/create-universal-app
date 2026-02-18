@@ -120,31 +120,99 @@ export async function setupAndroidCredentials(projectDir) {
 }
 
 /**
+ * Extract an expo.dev URL from EAS CLI output (stdout + stderr combined).
+ *
+ * Strategy 1 — direct build URL printed by newer eas-cli versions:
+ *   "Build details: https://expo.dev/accounts/user/projects/app/builds/uuid"
+ *
+ * Strategy 2 — construct a project builds URL from the credentials table,
+ * which is always printed even when the build request itself fails:
+ *   "Project                   @account/slug"
+ *   → https://expo.dev/accounts/account/projects/slug/builds
+ *
+ * Returns null only if neither pattern is found.
+ */
+function extractBuildUrl(text) {
+  // Strategy 1: direct build URL
+  const directMatch = text.match(/https:\/\/expo\.dev\/[^\s"'\]\n\r]+/);
+  if (directMatch) return directMatch[0].trimEnd();
+
+  // Strategy 2: parse "Project   @account/slug" from the credentials summary
+  const projectMatch = text.match(/Project\s+@([^/\s]+)\/([^\s\n\r]+)/);
+  if (projectMatch) {
+    const account = projectMatch[1];
+    const slug = projectMatch[2].trim();
+    return `https://expo.dev/accounts/${account}/projects/${slug}/builds`;
+  }
+
+  return null;
+}
+
+/**
+ * Run a command, stream output to the terminal in real time, capture both
+ * stdout and stderr, and always resolve (never reject).
+ */
+function runCommandCaptureBoth(cmd, args, cwd) {
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, { cwd, shell: true, stdio: ['inherit', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      const str = data.toString();
+      stdout += str;
+      const cleaned = str.split('\r').pop();
+      if (cleaned.trim()) process.stdout.write(cleaned);
+    });
+    child.stderr.on('data', (data) => {
+      const str = data.toString();
+      stderr += str;
+      const cleaned = str.split('\r').pop();
+      if (cleaned.trim()) process.stderr.write(cleaned);
+    });
+
+    child.on('close', (code) => resolve({ exitCode: code ?? 0, stdout, stderr }));
+    child.on('error', (err) => resolve({ exitCode: 1, stdout, stderr, error: err.message }));
+  });
+}
+
+/**
  * Build development app for iOS
  * @param {string} projectDir - Path to the project directory
  * @returns {Promise<{success: boolean, buildUrl?: string, message?: string}>}
  */
 export async function buildIosDevelopment(projectDir) {
   console.log(chalk.dim('  Queuing iOS development build...\n'));
-  try {
-    const output = await runCommand(
-      'npx', ['eas-cli', 'build', '--profile', 'development', '--platform', 'ios', '--no-wait', '--json', '--non-interactive'],
-      projectDir
-    );
-    const json = JSON.parse(output);
-    const build = Array.isArray(json) ? json[0] : json;
-    const account = build?.project?.ownerAccount?.name;
-    const slug = build?.project?.slug;
-    const id = build?.id;
-    const url = build?.buildUrl ?? build?.url
-      ?? (account && slug && id ? `https://expo.dev/accounts/${account}/projects/${slug}/builds/${id}` : 'https://expo.dev/builds');
-    console.log(chalk.green('  ✅ iOS build queued!\n'));
-    console.log(chalk.white(`    Track progress: ${url}\n`));
-    return { success: true, buildUrl: url };
-  } catch {
-    console.log(chalk.yellow('  Run when ready: npx eas-cli build --profile development --platform ios\n'));
-    return { success: false };
+  const { exitCode, stdout, stderr } = await runCommandCaptureBoth(
+    'npx',
+    ['eas-cli', 'build', '--profile', 'development', '--platform', 'ios', '--no-wait', '--non-interactive'],
+    projectDir
+  );
+
+  const combined = stdout + stderr;
+  const isOutdated = combined.includes('is now available') && combined.includes('eas-cli');
+  const url = extractBuildUrl(combined);
+
+  if (isOutdated) {
+    console.log(chalk.yellow('\n  ⚠️  eas-cli is outdated — update it to fix build failures:'));
+    console.log(chalk.white('     npm install -g eas-cli\n'));
   }
+
+  if (exitCode === 0) {
+    console.log(chalk.green('\n  ✅ iOS build queued!'));
+    console.log(chalk.white(`    Track progress: ${url ?? 'https://expo.dev/builds'}\n`));
+    return { success: true, buildUrl: url ?? 'https://expo.dev/builds' };
+  }
+
+  // Build failed server-side but we can still give a useful link
+  if (url) {
+    console.log(chalk.yellow('\n  ⚠️  Build request failed — view your project on Expo to retry:'));
+    console.log(chalk.white(`    ${url}\n`));
+    return { success: false, buildUrl: url };
+  }
+
+  console.log(chalk.yellow('\n  Run when ready: npx eas-cli build --profile development --platform ios\n'));
+  return { success: false };
 }
 
 /**
@@ -154,25 +222,36 @@ export async function buildIosDevelopment(projectDir) {
  */
 export async function buildAndroidDevelopment(projectDir) {
   console.log(chalk.dim('  Queuing Android development build...\n'));
-  try {
-    const output = await runCommand(
-      'npx', ['eas-cli', 'build', '--profile', 'development', '--platform', 'android', '--no-wait', '--json', '--non-interactive'],
-      projectDir
-    );
-    const json = JSON.parse(output);
-    const build = Array.isArray(json) ? json[0] : json;
-    const account = build?.project?.ownerAccount?.name;
-    const slug = build?.project?.slug;
-    const id = build?.id;
-    const url = build?.buildUrl ?? build?.url
-      ?? (account && slug && id ? `https://expo.dev/accounts/${account}/projects/${slug}/builds/${id}` : 'https://expo.dev/builds');
-    console.log(chalk.green('  ✅ Android build queued!\n'));
-    console.log(chalk.white(`    Track progress: ${url}\n`));
-    return { success: true, buildUrl: url };
-  } catch {
-    console.log(chalk.yellow('  Run when ready: npx eas-cli build --profile development --platform android\n'));
-    return { success: false };
+  const { exitCode, stdout, stderr } = await runCommandCaptureBoth(
+    'npx',
+    ['eas-cli', 'build', '--profile', 'development', '--platform', 'android', '--no-wait', '--non-interactive'],
+    projectDir
+  );
+
+  const combined = stdout + stderr;
+  const isOutdated = combined.includes('is now available') && combined.includes('eas-cli');
+  const url = extractBuildUrl(combined);
+
+  if (isOutdated) {
+    console.log(chalk.yellow('\n  ⚠️  eas-cli is outdated — update it to fix build failures:'));
+    console.log(chalk.white('     npm install -g eas-cli\n'));
   }
+
+  if (exitCode === 0) {
+    console.log(chalk.green('\n  ✅ Android build queued!'));
+    console.log(chalk.white(`    Track progress: ${url ?? 'https://expo.dev/builds'}\n`));
+    return { success: true, buildUrl: url ?? 'https://expo.dev/builds' };
+  }
+
+  // Build failed server-side but we can still give a useful link
+  if (url) {
+    console.log(chalk.yellow('\n  ⚠️  Build request failed — view your project on Expo to retry:'));
+    console.log(chalk.white(`    ${url}\n`));
+    return { success: false, buildUrl: url };
+  }
+
+  console.log(chalk.yellow('\n  Run when ready: npx eas-cli build --profile development --platform android\n'));
+  return { success: false };
 }
 
 /**

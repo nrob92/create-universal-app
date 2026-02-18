@@ -1,6 +1,13 @@
 import { Slot, usePathname, useRouter } from 'expo-router';
 import { YStack, XStack, Button, Text } from 'tamagui';
-import { Home, User, Settings } from '@tamagui/lucide-icons';
+import { Home, Compass, User, Settings } from '@tamagui/lucide-icons';
+
+const NAV_ITEMS = [
+  { label: 'Feed', icon: Home, href: '/home/feed' },
+  { label: 'Explore', icon: Compass, href: '/home/explore' },
+  { label: 'Profile', icon: User, href: '/home/profile' },
+  { label: 'Settings', icon: Settings, href: '/home/settings' },
+] as const;
 
 export default function AppLayout() {
   const pathname = usePathname();
@@ -17,40 +24,31 @@ export default function AppLayout() {
         borderTopColor="$borderColor"
         backgroundColor="$background"
         paddingVertical="$2"
+        paddingBottom="$3"
         justifyContent="space-around"
       >
-        <Button
-          chromeless
-          onPress={() => router.push('/home/feed')}
-          opacity={pathname.startsWith('/home/feed') ? 1 : 0.5}
-        >
-          <YStack alignItems="center" gap="$1">
-            <Home size={20} />
-            <Text fontSize="$1">Feed</Text>
-          </YStack>
-        </Button>
-
-        <Button
-          chromeless
-          onPress={() => router.push('/home/profile')}
-          opacity={pathname.startsWith('/home/profile') ? 1 : 0.5}
-        >
-          <YStack alignItems="center" gap="$1">
-            <User size={20} />
-            <Text fontSize="$1">Profile</Text>
-          </YStack>
-        </Button>
-
-        <Button
-          chromeless
-          onPress={() => router.push('/home/settings')}
-          opacity={pathname.startsWith('/home/settings') ? 1 : 0.5}
-        >
-          <YStack alignItems="center" gap="$1">
-            <Settings size={20} />
-            <Text fontSize="$1">Settings</Text>
-          </YStack>
-        </Button>
+        {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
+          const isActive = pathname.startsWith(href);
+          return (
+            <Button
+              key={label}
+              chromeless
+              onPress={() => router.push(href)}
+              opacity={isActive ? 1 : 0.45}
+            >
+              <YStack alignItems="center" gap="$1">
+                <Icon size={22} color={isActive ? '$blue10' : '$color'} />
+                <Text
+                  fontSize="$1"
+                  color={isActive ? '$blue10' : '$color'}
+                  fontWeight={isActive ? '600' : '400'}
+                >
+                  {label}
+                </Text>
+              </YStack>
+            </Button>
+          );
+        })}
       </XStack>
     </YStack>
   );

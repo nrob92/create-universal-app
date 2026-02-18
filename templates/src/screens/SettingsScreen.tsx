@@ -1,19 +1,44 @@
 import { useState, useEffect } from 'react';
-import { YStack, H2, Paragraph, Input, Separator, Card, XStack } from 'tamagui';
+import { ScrollView, YStack, H2, Paragraph, Input, Separator, Card, XStack, Text } from 'tamagui';
+import {
+  User,
+  Mail,
+  Crown,
+  Palette,
+  LogOut,
+  ChevronRight,
+} from '@tamagui/lucide-icons';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { signOut } from '~/features/auth/auth';
 import { usePayments } from '~/features/payments/usePayments';
 import { supabase } from '~/features/auth/client/supabaseClient';
 import { useRouter } from 'expo-router';
 import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
-import { PageContainer } from '~/interface/layout/PageContainer';
 import { Spinner } from '~/interface/feedback/Spinner';
 import { ThemeToggle } from '~/features/theme/ThemeToggle';
+import { SettingRow } from '~/interface/layout/SettingRow';
 
 interface Profile {
   display_name: string | null;
   avatar_url: string | null;
   onboarded: boolean;
+}
+
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <Text
+      color="$gray10"
+      fontSize="$2"
+      fontWeight="600"
+      textTransform="uppercase"
+      letterSpacing={0.8}
+      paddingHorizontal="$4"
+      paddingTop="$4"
+      paddingBottom="$1"
+    >
+      {label}
+    </Text>
+  );
 }
 
 export function SettingsScreen() {
@@ -25,6 +50,7 @@ export function SettingsScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [editingName, setEditingName] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -58,6 +84,7 @@ export function SettingsScreen() {
       setMessage(error.message);
     } else {
       setMessage('Profile updated!');
+      setEditingName(false);
     }
     setSaving(false);
   };
@@ -72,78 +99,112 @@ export function SettingsScreen() {
   }
 
   return (
-    <PageContainer>
-      <YStack gap="$4" width="100%" maxWidth={400}>
-        <H2>Settings</H2>
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <YStack paddingBottom="$10">
+        <YStack padding="$4" paddingBottom="$2">
+          <H2>Settings</H2>
+        </YStack>
 
-        {/* Profile Section */}
-        <Card elevate bordered padding="$4" borderRadius="$4">
-          <YStack gap="$3">
-            <Paragraph fontWeight="bold" fontSize="$5">Profile</Paragraph>
+        {/* Account section */}
+        <SectionHeader label="Account" />
+        <Card bordered borderRadius="$5" marginHorizontal="$4" overflow="hidden">
+          {/* Display name row */}
+          <SettingRow
+            icon={User}
+            label="Display Name"
+            value={profile?.display_name ?? 'Not set'}
+            onPress={() => setEditingName((v) => !v)}
+          />
 
-            <YStack gap="$2">
-              <Paragraph color="$gray10" fontSize="$2">Display Name</Paragraph>
+          {editingName && (
+            <YStack padding="$4" gap="$3" borderTopWidth={1} borderTopColor="$borderColor">
               <Input
                 value={displayName}
                 onChangeText={setDisplayName}
                 placeholder="Your name"
-                borderRadius="$3"
+                borderRadius="$4"
+                autoFocus
               />
+              {message !== '' && (
+                <Paragraph
+                  color={message.includes('updated') ? '$green10' : '$red10'}
+                  fontSize="$2"
+                >
+                  {message}
+                </Paragraph>
+              )}
+              <XStack gap="$2">
+                <PrimaryButton
+                  flex={1}
+                  onPress={handleSave}
+                  disabled={saving}
+                  size="$3"
+                >
+                  {saving ? 'Saving...' : 'Save'}
+                </PrimaryButton>
+                <PrimaryButton
+                  flex={1}
+                  theme="gray"
+                  onPress={() => setEditingName(false)}
+                  size="$3"
+                >
+                  Cancel
+                </PrimaryButton>
+              </XStack>
             </YStack>
+          )}
 
-            <YStack gap="$2">
-              <Paragraph color="$gray10" fontSize="$2">Email</Paragraph>
-              <Paragraph>{user?.email ?? '—'}</Paragraph>
-            </YStack>
+          <Separator />
 
-            {message !== '' && (
-              <Paragraph
-                color={message.includes('updated') ? '$green10' : '$red10'}
-                fontSize="$2"
-              >
-                {message}
-              </Paragraph>
-            )}
-
-            <PrimaryButton onPress={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Changes'}
-            </PrimaryButton>
-          </YStack>
+          <SettingRow
+            icon={Mail}
+            label="Email"
+            value={user?.email ?? '—'}
+            showChevron={false}
+          />
         </Card>
 
-        {/* Subscription Section */}
-        <Card elevate bordered padding="$4" borderRadius="$4">
-          <YStack gap="$3">
-            <Paragraph fontWeight="bold" fontSize="$5">Subscription</Paragraph>
-            <XStack justifyContent="space-between" alignItems="center">
-              <Paragraph color="$gray10">Current plan</Paragraph>
-              <Paragraph fontWeight="bold">
-                {isPro ? 'Pro' : 'Free'}
-              </Paragraph>
-            </XStack>
-            {!isPro && (
+        {/* Subscription section */}
+        <SectionHeader label="Subscription" />
+        <Card bordered borderRadius="$5" marginHorizontal="$4" overflow="hidden">
+          <SettingRow
+            icon={Crown}
+            label="Plan"
+            value={isPro ? 'Pro' : 'Free'}
+            onPress={!isPro ? () => router.push('/home/paywall') : undefined}
+            showChevron={!isPro}
+          />
+          {!isPro && (
+            <YStack padding="$4" borderTopWidth={1} borderTopColor="$borderColor">
               <PrimaryButton onPress={() => router.push('/home/paywall')}>
                 Upgrade to Pro
               </PrimaryButton>
-            )}
-          </YStack>
+            </YStack>
+          )}
         </Card>
 
-        {/* Appearance */}
-        <Card elevate bordered padding="$4" borderRadius="$4">
-          <XStack justifyContent="space-between" alignItems="center">
-            <Paragraph fontWeight="bold" fontSize="$5">Appearance</Paragraph>
-            <ThemeToggle />
-          </XStack>
+        {/* Appearance section */}
+        <SectionHeader label="Appearance" />
+        <Card bordered borderRadius="$5" marginHorizontal="$4" overflow="hidden">
+          <SettingRow
+            icon={Palette}
+            label="Theme"
+            showChevron={false}
+            rightElement={<ThemeToggle />}
+          />
         </Card>
 
-        <Separator />
-
-        {/* Danger Zone */}
-        <PrimaryButton theme="red" onPress={handleSignOut}>
-          Sign Out
-        </PrimaryButton>
+        {/* Danger zone */}
+        <SectionHeader label="Account Actions" />
+        <Card bordered borderRadius="$5" marginHorizontal="$4" overflow="hidden">
+          <SettingRow
+            icon={LogOut}
+            label="Sign Out"
+            onPress={handleSignOut}
+            destructive
+          />
+        </Card>
       </YStack>
-    </PageContainer>
+    </ScrollView>
   );
 }

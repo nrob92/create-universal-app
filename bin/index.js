@@ -8,6 +8,22 @@ import { setupEas } from '../src/eas.js';
 import chalk from 'chalk';
 import path from 'path';
 import fs from 'fs-extra';
+import { spawn } from 'child_process';
+
+function initGit(projectDir) {
+  return new Promise((resolve) => {
+    const run = (cmd, args) => new Promise((res) => {
+      const child = spawn(cmd, args, { cwd: projectDir, shell: true, stdio: 'pipe' });
+      child.on('close', res);
+      child.on('error', () => res(1));
+    });
+    run('git', ['init'])
+      .then(() => run('git', ['add', '.']))
+      .then(() => run('git', ['-c', 'user.email=scaffold@create-universal-app', '-c', 'user.name=create-universal-app', 'commit', '-m', 'init']))
+      .then(() => resolve(true))
+      .catch(() => resolve(false));
+  });
+}
 
 async function main() {
   console.log(chalk.bold.cyan('\n  ✦ Universal App Generator\n'));
@@ -103,6 +119,11 @@ async function main() {
   if (answers.runInstall) {
     const result = await runInstaller(answers.projectName);
     installSuccess = result !== null;
+  }
+
+  // ── Step 5b: Init git repo so EAS uses npm (package-lock.json tracked) ──
+  if (installSuccess) {
+    await initGit(projectDir);
   }
 
   const runCmd = 'npm run';
