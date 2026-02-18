@@ -7,6 +7,8 @@ import { useAuth } from '~/features/auth/client/useAuth';
 import { ErrorBoundary } from '~/interface/feedback/ErrorBoundary';
 import { Spinner } from '~/interface/feedback/Spinner';
 import { validateEnv } from '~/constants/env';
+import { PlatformSpecificRootProvider } from '~/interface/platform/PlatformSpecificRootProvider';
+import { ToastProvider } from '~/interface/toast/Toast';
 
 validateEnv();
 
@@ -20,15 +22,18 @@ function AuthGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
 
-    const inAuthGroup = segments[0] === '(app)' && segments[1] === 'auth';
-    const inHomeGroup = segments[0] === '(app)' && segments[1] === 'home';
+    const firstSegment = segments[0];
+    const isOnAuthPage = !firstSegment;
+    const isOnHomeRoutes = firstSegment === 'home' || firstSegment === '(app)';
 
-    if (!user && inHomeGroup) {
-      // Not signed in but trying to access protected routes
+    if (!user && isOnHomeRoutes) {
       router.replace('/');
-    } else if (user && (segments.length === 0 || inAuthGroup)) {
-      // Signed in but on onboarding or auth screens
+      return;
+    }
+
+    if (user && isOnAuthPage) {
       router.replace('/home/feed');
+      return;
     }
   }, [user, loading, segments]);
 
@@ -49,11 +54,15 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <TamaguiRootProvider>
-        <ErrorBoundary>
-          <AuthGuard>
-            <Slot />
-          </AuthGuard>
-        </ErrorBoundary>
+        <PlatformSpecificRootProvider>
+          <ToastProvider>
+            <ErrorBoundary>
+              <AuthGuard>
+                <Slot />
+              </AuthGuard>
+            </ErrorBoundary>
+          </ToastProvider>
+        </PlatformSpecificRootProvider>
       </TamaguiRootProvider>
     </QueryClientProvider>
   );
