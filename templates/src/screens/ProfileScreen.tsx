@@ -134,9 +134,11 @@ export function ProfileScreen() {
                     <Star size={40} color="white" opacity={0.3} fill="white" />
                 </XStack>
                 <Button
-                  backgroundColor="white"
+                  backgroundColor="$background"
                   sized="medium"
                   onPress={() => router.push('/home/paywall')}
+                  hoverStyle={{ backgroundColor: '$background', opacity: 0.9 }}
+                  pressStyle={{ backgroundColor: '$background', scale: 0.98 }}
                 >
                   <Text color="$brandPrimary" fontWeight="900">Upgrade for $9.99</Text>
                 </Button>
@@ -175,25 +177,25 @@ export function ProfileScreen() {
             </YStack>
 
             {/* Logout Button */}
-            <YStack width="100%" maxWidth={420} marginTop="$6" alignItems="center" gap="$2">
-              <View 
-                paddingVertical="$3" 
-                paddingHorizontal="$6" 
-                borderRadius="$10" 
-                onPress={signOut}
-                pressStyle={{ scale: 0.97, backgroundColor: 'rgba(244, 162, 97, 0.05)' }}
-                hoverStyle={{ backgroundColor: 'rgba(244, 162, 97, 0.05)' }}
-                animation="quick"
-                cursor="pointer"
+            <YStack width="100%" maxWidth={420} marginTop="$8" gap="$3" alignItems="center">
+              <Button 
+                variant="outlined" 
+                onPress={signOut} 
+                width="100%" 
+                sized="large"
+                borderColor="$brandAccent"
+                backgroundColor="rgba(244, 162, 97, 0.03)"
+                hoverStyle={{ borderColor: '$brandAccent', backgroundColor: 'rgba(244, 162, 97, 0.08)' }}
+                pressStyle={{ scale: 0.98, opacity: 0.8 }}
               >
-                <XStack gap="$2" alignItems="center">
-                  <LogOut size={16} color="$brandAccent" />
-                  <Text color="$brandAccent" fontWeight="800" fontSize={14} textTransform="uppercase" letterSpacing={1}>
+                <XStack gap="$3" alignItems="center">
+                  <LogOut size={20} color="$brandAccent" />
+                  <Text color="$brandAccent" fontWeight="800" fontSize={16} textTransform="uppercase" letterSpacing={1}>
                     Leave the Sushi Club
                   </Text>
                 </XStack>
-              </View>
-              <Text color="$gray8" fontSize={11} fontWeight="600">You can always join back later 🍣</Text>
+              </Button>
+              <Text color="$gray8" fontSize={12} fontWeight="600">We'll keep your table ready for you 🍣</Text>
             </YStack>
           </YStack>
         </YStack>

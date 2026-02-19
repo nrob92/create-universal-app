@@ -15,7 +15,7 @@ validateEnv();
 const queryClient = new QueryClient();
 
 function AuthGuard({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isOnboarded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -24,18 +24,26 @@ function AuthGuard({ children }: { children: ReactNode }) {
 
     const firstSegment = segments[0];
     const isOnAuthPage = !firstSegment;
+    const isOnOnboarding = segments[1] === 'onboarding';
     const isOnHomeRoutes = firstSegment === 'home' || firstSegment === '(app)';
 
-    if (!user && isOnHomeRoutes) {
+    if (!user && (isOnHomeRoutes || isOnOnboarding)) {
       router.replace('/');
       return;
     }
 
-    if (user && isOnAuthPage) {
-      router.replace('/home/feed');
-      return;
+    if (user) {
+      if (!isOnboarded && !isOnOnboarding) {
+        router.replace('/onboarding');
+        return;
+      }
+      
+      if (isOnboarded && (isOnAuthPage || isOnOnboarding)) {
+        router.replace('/home/feed');
+        return;
+      }
     }
-  }, [user, loading, segments]);
+  }, [user, loading, isOnboarded, segments]);
 
   if (loading) {
     return <Spinner label="Loading..." />;

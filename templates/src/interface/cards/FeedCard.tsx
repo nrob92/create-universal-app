@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Paragraph, XStack, YStack, Text, View } from 'tamagui';
+import { Card, Paragraph, XStack, YStack, Text, View, useTheme } from 'tamagui';
 import { Heart, MessageCircle, Share2 } from '@tamagui/lucide-icons';
 import { haptics } from '~/helpers/haptics';
 
@@ -22,12 +22,17 @@ export function FeedCard({
 }: FeedCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [likes, setLikes] = useState(initialLikes);
+  const theme = useTheme();
 
   const handleLike = () => {
     haptics.medium();
-    setIsLiked(!isLiked);
-    setLikes(prev => isLiked ? prev - 1 : prev + 1);
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+    setLikes(prev => newLikedState ? prev + 1 : prev - 1);
   };
+
+  const brandPrimary = theme.brandPrimary?.get() || '#FF7051';
+  const brandSecondary = theme.brandSecondary?.get() || '#95D5B2';
 
   return (
     <Card
@@ -39,7 +44,6 @@ export function FeedCard({
       borderColor="$borderColor"
       pressStyle={{ scale: 0.98 }}
       hoverStyle={{ borderColor: '$brandPrimary' }}
-      animation="quick"
       shadowColor="$shadowColor"
       shadowRadius={15}
       shadowOpacity={0.2}
@@ -92,13 +96,15 @@ export function FeedCard({
                 backgroundColor={isLiked ? "rgba(255,112,81,0.15)" : "rgba(214, 40, 40, 0.1)"} 
                 p="$2" 
                 borderRadius="$10"
-                animation="bouncy"
-                scale={isLiked ? 1.2 : 1}
+                width={36}
+                height={36}
+                alignItems="center"
+                justifyContent="center"
               >
                 <Heart 
-                    size={16} 
-                    color={isLiked ? "$brandPrimary" : "$gray9"} 
-                    fill={isLiked ? "$brandPrimary" : "transparent"} 
+                    size={18} 
+                    color={isLiked ? brandPrimary : "$gray9"} 
+                    fill={isLiked ? brandPrimary : "transparent"} 
                 />
               </View>
               <Text color="$color" fontSize={14} fontWeight="700">{likes}</Text>
@@ -106,7 +112,7 @@ export function FeedCard({
             
             <XStack gap="$1.5" alignItems="center" pressStyle={{ opacity: 0.6 }}>
               <View backgroundColor="rgba(149, 213, 178, 0.1)" p="$2" borderRadius="$10">
-                <MessageCircle size={16} color="$brandSecondary" />
+                <MessageCircle size={16} color={brandSecondary} />
               </View>
               <Text color="$color" fontSize={14} fontWeight="700">{comments}</Text>
             </XStack>

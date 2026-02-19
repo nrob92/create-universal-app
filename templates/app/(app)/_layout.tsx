@@ -16,6 +16,8 @@ export default function AppLayout() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const isOnboarding = pathname === '/onboarding';
+
   const handleNav = (href: string) => {
     haptics.light();
     router.push(href as any);
@@ -23,13 +25,13 @@ export default function AppLayout() {
 
   return (
     <YStack flex={1} backgroundColor="$background">
-      {isWeb && <WebNav />}
+      {isWeb && !isOnboarding && <WebNav />}
       
-      <View flex={1} paddingTop={isWeb ? 70 : 0}>
+      <View flex={1} paddingTop={isWeb && !isOnboarding ? 70 : 0}>
         <Slot />
       </View>
 
-      {!isWeb && (
+      {!isWeb && !isOnboarding && (
         <XStack
           borderTopWidth={1}
           borderTopColor="$borderColor"

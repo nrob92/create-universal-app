@@ -1,9 +1,10 @@
 import { Link, usePathname, useRouter } from 'expo-router';
-import { XStack, YStack, Text, View, isWeb, styled, Separator, useMedia, Sheet } from 'tamagui';
+import { XStack, YStack, Text, View, isWeb, styled, Separator, useMedia, Sheet, useTheme } from 'tamagui';
 import { Home, Compass, User, Settings, Star, Menu, LogOut } from '@tamagui/lucide-icons';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { Button } from '~/interface/buttons/Button';
 import { useState } from 'react';
+import { PageContainer } from './PageContainer';
 
 const NAV_ITEMS = [
   { label: 'Feed', icon: Home, href: '/home/feed' },
@@ -39,10 +40,12 @@ export function WebNav() {
   const { user, signOut } = useAuth();
   const media = useMedia();
   const [open, setOpen] = useState(false);
+  const theme = useTheme();
 
   if (!isWeb) return null;
 
   const isMobile = media.sm || media.xs;
+  const brandPrimary = theme.brandPrimary?.get() || '#FF7051';
 
   return (
     <XStack
@@ -55,97 +58,107 @@ export function WebNav() {
       top={0}
       zIndex={1000}
       alignItems="center"
-      justifyContent="space-between"
-      paddingHorizontal="$6"
+      justifyContent="center"
     >
-      <XStack gap="$8" alignItems="center">
-        {/* Logo */}
-        <Link href="/home/feed" asChild>
-          <XStack gap="$2" alignItems="center" cursor="pointer">
-            <View backgroundColor="$brandPrimary" p="$1.5" borderRadius="$4">
-              <Text fontSize={20}>🍣</Text>
-            </View>
-            <Text fontWeight="900" fontSize={22} letterSpacing={-1} color="$color">
-              UniStack
-            </Text>
-          </XStack>
-        </Link>
+      <PageContainer 
+        flexDirection="row" 
+        alignItems="center" 
+        justifyContent="space-between"
+        paddingHorizontal="$6"
+        minWidth="100%"
+        $md={{ minWidth: 760 }}
+        $lg={{ minWidth: 860 }}
+        $xl={{ minWidth: 1140 }}
+      >
+        <XStack gap="$8" alignItems="center">
+          {/* Logo */}
+          <Link href="/home/feed" asChild>
+            <XStack gap="$2" alignItems="center" cursor="pointer">
+              <View backgroundColor="$brandPrimary" p="$1.5" borderRadius="$4">
+                <Text fontSize={20}>🍣</Text>
+              </View>
+              <Text fontWeight="900" fontSize={22} letterSpacing={-1} color="$color">
+                UniStack
+              </Text>
+            </XStack>
+          </Link>
 
-        {/* Navigation Links - Hidden on Mobile Web */}
-        {!isMobile && (
-          <XStack gap="$1">
-            {NAV_ITEMS.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-              return (
-                <Link key={item.label} href={item.href} asChild>
-                  <NavLink active={isActive}>
-                    <item.icon size={18} color={isActive ? '$brandPrimary' : '$gray10'} />
-                    <Text 
-                      color={isActive ? '$brandPrimary' : '$gray10'} 
-                      fontWeight={isActive ? '800' : '600'}
-                      fontSize={14}
-                    >
-                      {item.label}
-                    </Text>
-                  </NavLink>
-                </Link>
-              );
-            })}
-          </XStack>
-        )}
-      </XStack>
+          {/* Navigation Links - Hidden on Mobile Web */}
+          {!isMobile && (
+            <XStack gap="$1">
+              {NAV_ITEMS.map((item) => {
+                const isActive = pathname.startsWith(item.href);
+                return (
+                  <Link key={item.label} href={item.href} asChild>
+                    <NavLink active={isActive}>
+                      <item.icon size={18} color={isActive ? brandPrimary : '$gray10'} />
+                      <Text 
+                        color={isActive ? '$brandPrimary' : '$gray10'} 
+                        fontWeight={isActive ? '800' : '600'}
+                        fontSize={14}
+                      >
+                        {item.label}
+                      </Text>
+                    </NavLink>
+                  </Link>
+                );
+              })}
+            </XStack>
+          )}
+        </XStack>
 
-      <XStack gap="$4" alignItems="center">
-        {/* Desktop Profile Info */}
-        {!isMobile && (
-          <>
+        <XStack gap="$4" alignItems="center">
+          {/* Desktop Profile Info */}
+          {!isMobile && (
+            <>
+              <Button 
+                  variant="ghost" 
+                  onPress={() => router.push('/home/settings')}
+                  padding="$2"
+              >
+                  <Settings size={20} color="$gray10" />
+              </Button>
+              
+              <Separator vertical height={20} borderColor="$borderColor" />
+              
+              {user && (
+                  <XStack gap="$3" alignItems="center">
+                      <YStack alignItems="flex-end">
+                          <Text fontWeight="800" fontSize={14}>{user.email?.split('@')[0]}</Text>
+                          <XStack gap="$1" alignItems="center">
+                              <Star size={10} color="$brandAccent" fill="$brandAccent" />
+                              <Text color="$brandAccent" fontSize={10} fontWeight="800" textTransform="uppercase">Pro</Text>
+                          </XStack>
+                      </YStack>
+                      <View 
+                          width={36} 
+                          height={36} 
+                          borderRadius={18} 
+                          backgroundColor="$brandPrimary" 
+                          alignItems="center" 
+                          justifyContent="center"
+                      >
+                          <Text fontWeight="900" color="white" fontSize={14}>
+                              {user.email?.[0].toUpperCase()}
+                          </Text>
+                      </View>
+                  </XStack>
+              )}
+            </>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          {isMobile && (
             <Button 
-                variant="ghost" 
-                onPress={() => router.push('/home/settings')}
-                padding="$2"
+              variant="ghost" 
+              padding="$2" 
+              onPress={() => setOpen(true)}
             >
-                <Settings size={20} color="$gray10" />
+              <Menu size={24} color="$color" />
             </Button>
-            
-            <Separator vertical height={20} borderColor="$borderColor" />
-            
-            {user && (
-                <XStack gap="$3" alignItems="center">
-                    <YStack alignItems="flex-end">
-                        <Text fontWeight="800" fontSize={14}>{user.email?.split('@')[0]}</Text>
-                        <XStack gap="$1" alignItems="center">
-                            <Star size={10} color="$brandAccent" fill="$brandAccent" />
-                            <Text color="$brandAccent" fontSize={10} fontWeight="800" textTransform="uppercase">Pro</Text>
-                        </XStack>
-                    </YStack>
-                    <View 
-                        width={36} 
-                        height={36} 
-                        borderRadius={18} 
-                        backgroundColor="$brandPrimary" 
-                        alignItems="center" 
-                        justifyContent="center"
-                    >
-                        <Text fontWeight="900" color="white" fontSize={14}>
-                            {user.email?.[0].toUpperCase()}
-                        </Text>
-                    </View>
-                </XStack>
-            )}
-          </>
-        )}
-
-        {/* Mobile Menu Toggle */}
-        {isMobile && (
-          <Button 
-            variant="ghost" 
-            padding="$2" 
-            onPress={() => setOpen(true)}
-          >
-            <Menu size={24} color="$color" />
-          </Button>
-        )}
-      </XStack>
+          )}
+        </XStack>
+      </PageContainer>
 
       {/* Mobile Sidebar (Sheet) */}
       <Sheet
@@ -179,7 +192,7 @@ export function WebNav() {
                     onPress={() => setOpen(false)}
                     paddingVertical="$3"
                 >
-                  <item.icon size={20} color={pathname.startsWith(item.href) ? '$brandPrimary' : '$gray10'} />
+                  <item.icon size={20} color={pathname.startsWith(item.href) ? brandPrimary : '$gray10'} />
                   <Text fontSize={16} fontWeight="700">{item.label}</Text>
                 </NavLink>
               </Link>

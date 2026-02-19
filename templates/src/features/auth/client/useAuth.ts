@@ -8,9 +8,11 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   isDemoMode: boolean;
+  isOnboarded: boolean;
   initialize: () => Promise<void>;
   signInAsDemo: () => Promise<void>;
   signOut: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 }
 
 // Mock demo user for testing without backend
@@ -44,17 +46,19 @@ const createDemoSession = (): Session => ({
 });
 
 const DEMO_MODE_KEY = 'demoMode';
+const ONBOARDED_KEY = 'onboarded';
 
 export const useAuth = create<AuthState>((set, get) => ({
   user: null,
   session: null,
   loading: true,
   isDemoMode: false,
+  isOnboarded: false,
 
   initialize: async () => {
     try {
-      // Check if we have a stored demo session using AsyncStorage (works on both web and native)
       const storedDemoMode = await AsyncStorage.getItem(DEMO_MODE_KEY);
+      const storedOnboarded = await AsyncStorage.getItem(ONBOARDED_KEY);
       
       if (storedDemoMode === 'true') {
         set({
@@ -62,17 +66,28 @@ export const useAuth = create<AuthState>((set, get) => ({
           user: createDemoUser(),
           loading: false,
           isDemoMode: true,
+          isOnboarded: storedOnboarded === 'true',
         });
         return;
       }
 
       const { data: { session } } = await supabase.auth.getSession();
-      set({ session, user: session?.user ?? null, loading: false });
+      
+      let onboarded = storedOnboarded === 'true';
+      if (session?.user && !onboarded) {
+        // Real check against database
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('onboarded')
+          .eq('id', session.user.id)
+          .single();
+        onboarded = !!profile?.onboarded;
+      }
+
+      set({ session, user: session?.user ?? null, loading: false, isOnboarded: onboarded });
 
       supabase.auth.onAuthStateChange((_event, session) => {
-        // If we are in demo mode, ignore Supabase auth changes
         if (get().isDemoMode) return;
-
         set({ session, user: session?.user ?? null, isDemoMode: false });
       });
     } catch (error) {
@@ -85,11 +100,14 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       const demoSession = createDemoSession();
       await AsyncStorage.setItem(DEMO_MODE_KEY, 'true');
+      const onboarded = await AsyncStorage.getItem(ONBOARDED_KEY) === 'true';
+      
       set({
         session: demoSession,
         user: demoSession.user,
         loading: false,
         isDemoMode: true,
+        isOnboarded: onboarded,
       });
     } catch (error) {
       console.error('Error signing in as demo:', error);
@@ -98,18 +116,34 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     try {
-      // Clear demo mode
       if (get().isDemoMode) {
         await AsyncStorage.removeItem(DEMO_MODE_KEY);
-        set({ session: null, user: null, isDemoMode: false });
+        set({ session: null, user: null, isDemoMode: false, isOnboarded: false });
         return;
       }
       
-      // Regular Supabase sign out
       await supabase.auth.signOut();
-      set({ session: null, user: null, isDemoMode: false });
+      set({ session: null, user: null, isDemoMode: false, isOnboarded: false });
     } catch (error) {
       console.error('Error signing out:', error);
+    }
+  },
+
+  completeOnboarding: async () => {
+    try {
+      const { user, isDemoMode } = get();
+      await AsyncStorage.setItem(ONBOARDED_KEY, 'true');
+      
+      if (!isDemoMode && user) {
+        await supabase
+          .from('profiles')
+          .update({ onboarded: true })
+          .eq('id', user.id);
+      }
+      
+      set({ isOnboarded: true });
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
     }
   },
 }));

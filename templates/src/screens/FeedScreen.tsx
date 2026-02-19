@@ -90,7 +90,6 @@ export function FeedScreen() {
                     onPress={() => setActiveFilter(filter)}
                     cursor="pointer"
                     pressStyle={{ scale: 0.95, opacity: 0.8 }}
-                    animation="quick"
                   >
                     <Text
                       fontSize={14}
