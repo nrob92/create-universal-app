@@ -36,7 +36,7 @@ export function FeedCard({
 
   return (
     <Card
-      bordered
+      borderWidth={1}
       borderRadius="$8"
       overflow="hidden"
       backgroundColor="$backgroundStrong"

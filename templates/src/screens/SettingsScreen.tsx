@@ -1,6 +1,6 @@
 import { ScrollView, YStack, H2, XStack, Text, View, Separator, Switch, isWeb } from 'tamagui';
 import { ChevronRight, Bell, Shield, CircleUser, CreditCard, HelpCircle, Moon, Star, ArrowLeft } from '@tamagui/lucide-icons';
-import { SafePage } from '~/interface/layout/PageContainer';
+import { SafePage } from '~/components/layout/PageContainer';
 import { useTheme } from '~/tamagui/TamaguiRootProvider';
 import { useRouter } from 'expo-router';
 

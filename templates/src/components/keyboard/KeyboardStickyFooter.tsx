@@ -11,7 +11,7 @@ export interface KeyboardStickyFooterProps {
 // Web version - just a bit of padding
 export const KeyboardStickyFooter = ({ children, offset }: KeyboardStickyFooterProps) => {
   return (
-    <YStack maxW={500} self="center" pt="$8" pb="$4" style={{ paddingBottom: offset }}>
+    <YStack maw={500} self="center" pt="$8" pb="$4" style={{ paddingBottom: offset }}>
       {children}
     </YStack>
   );

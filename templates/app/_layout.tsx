@@ -5,11 +5,11 @@ import * as WebBrowser from 'expo-web-browser';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TamaguiRootProvider } from '~/tamagui/TamaguiRootProvider';
 import { useAuth } from '~/features/auth/client/useAuth';
-import { ErrorBoundary } from '~/interface/feedback/ErrorBoundary';
-import { Spinner } from '~/interface/feedback/Spinner';
+import { ErrorBoundary } from '~/components/blocks/ErrorBoundary';
+import { Spinner } from '~/components/ui/Spinner';
 import { validateEnv } from '~/constants/env';
-import { PlatformSpecificRootProvider } from '~/interface/platform/PlatformSpecificRootProvider';
-import { ToastProvider } from '~/interface/toast/Toast';
+import { PlatformSpecificRootProvider } from '~/components/platform/PlatformSpecificRootProvider';
+import { ToastProvider } from '~/components/toast/Toast';
 
 WebBrowser.maybeCompleteAuthSession();
 

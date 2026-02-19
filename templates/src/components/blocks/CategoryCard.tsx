@@ -1,9 +1,9 @@
 import { Card, Text, YStack, View } from 'tamagui';
 import type { NamedExoticComponent } from 'react';
-import type { LucideProps } from '@tamagui/lucide-icons';
+import type { IconProps } from '@tamagui/lucide-icons';
 
 interface CategoryCardProps {
-  icon: NamedExoticComponent<LucideProps>;
+  icon: React.ElementType;
   label: string;
   backgroundColor: string;
   iconColor?: string;
@@ -20,7 +20,7 @@ export function CategoryCard({
   return (
     <Card
       flex={1}
-      bordered
+      borderWidth={1}
       padding="$5"
       borderRadius="$8"
       backgroundColor="$backgroundStrong"

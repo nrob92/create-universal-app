@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Spinner } from './Spinner';
+import { Spinner } from '~/components/ui/Spinner';
 import { EmptyState } from './EmptyState';
 
 interface LoadingStateProps {

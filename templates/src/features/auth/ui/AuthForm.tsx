@@ -3,9 +3,9 @@ import { YStack, XStack, Paragraph, Separator, isWeb, Text, View, H2, ScrollView
 import { useRouter } from 'expo-router';
 import { signIn, signUp, signInWithGoogle } from '~/features/auth/auth';
 import { useAuth } from '~/features/auth/client/useAuth';
-import { Button } from '~/interface/buttons/Button';
-import { InputField, PasswordInput } from '~/interface/forms/Input';
-import { AuthPageContainer } from '~/interface/layout/PageContainer';
+import { Button } from '~/components/ui/Button';
+import { InputField, PasswordInput } from '~/components/ui/Input';
+import { AuthPageContainer } from '~/components/layout/PageContainer';
 import { haptics } from '~/helpers/haptics';
 
 export function AuthForm() {
@@ -91,9 +91,9 @@ export function AuthForm() {
       >
         <YStack
           width="100%"
-          maxWidth={isWeb ? 440 : '100%'}
+          maxWidth={isWeb ? 380 : '100%'}
           alignSelf="center"
-          gap={isWeb ? "$8" : "$6"}
+          gap={isWeb ? "$6" : "$5"}
           paddingVertical="$6"
           animation="quick"
           enterStyle={{ opacity: 0, y: 20, scale: 0.98 }}
@@ -132,21 +132,28 @@ export function AuthForm() {
           {/* Auth Card */}
           <YStack
             backgroundColor="$backgroundStrong"
-            borderRadius="$10"
+            borderRadius="$8"
             borderWidth={1}
             borderColor="$borderColor"
-            p={isWeb ? "$8" : "$6"}
-            gap="$6"
+            p={isWeb ? "$6" : "$5"}
+            gap="$5"
             shadowColor="$black1"
             shadowRadius={40}
             shadowOpacity={0.2}
+            animation="bouncy"
+            enterStyle={{ 
+              opacity: 0, 
+              y: 10, 
+              scale: 0.95,
+              rotate: '-2deg' // Creates a slight wobble as it enters
+            }}
           >
-            <YStack gap="$1">
-              <H2 fontWeight="900" fontSize={22} letterSpacing={-0.5}>
-                {isSignUp ? 'Create Membership' : 'Welcome Back'}
+            <YStack gap="$1" alignItems="center">
+              <H2 fontWeight="900" fontSize={20} letterSpacing={-0.5} textAlign="center" fontFamily="$heading">
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
               </H2>
-              <Paragraph color="$gray10" fontWeight="600" fontSize={13}>
-                {isSignUp ? 'Join the finest sushi community' : 'Your table is ready for you'}
+              <Paragraph color="$gray10" fontWeight="600" fontSize={12} textAlign="center" fontFamily="$body">
+                {isSignUp ? 'Join the finest developer community' : 'Ready to build something great?'}
               </Paragraph>
             </YStack>
 
@@ -189,11 +196,9 @@ export function AuthForm() {
                 disabled={loading} 
                 variant="primary" 
                 sized="large" 
-                marginTop="$4"
-                shadowColor="$brandPrimary"
-                shadowRadius={15}
+                marginTop="$2"
               >
-                {loading ? (isSignUp ? 'Creating...' : 'Signing in...') : isSignUp ? 'Join the Club' : 'Enter Restaurant'}
+                {loading ? (isSignUp ? 'Creating...' : 'Signing in...') : isSignUp ? 'Join UniStack' : 'Enter UniStack'}
               </Button>
             </YStack>
 
@@ -203,24 +208,55 @@ export function AuthForm() {
               <Separator flex={1} />
             </XStack>
 
-            <XStack gap="$3">
+            <XStack gap="$3" width="100%">
               <Button
                 onPress={handleDemoLogin}
                 disabled={demoLoading}
                 variant="secondary"
+                sized="medium"
                 flex={1}
+                backgroundColor="$color2"
+                borderColor="$borderColor"
+                borderWidth={1}
+                hoverStyle={{ backgroundColor: '$color3' }}
+                pressStyle={{ backgroundColor: '$color1' }}
               >
-                Demo
+                <XStack gap="$2" alignItems="center" justifyContent="center">
+                  <Text fontFamily="$body" fontWeight="800" fontSize={14}>🚀</Text>
+                  <Text fontFamily="$body" fontWeight="600" color="$color12" fontSize={13}>Try Demo</Text>
+                </XStack>
               </Button>
 
               <Button 
-                  variant="outlined" 
+                  variant="secondary" 
+                  sized="medium"
                   onPress={handleGoogleLogin}
                   disabled={googleLoading}
                   flex={1}
+                  backgroundColor="$color2"
                   borderColor="$borderColor"
+                  borderWidth={1}
+                  hoverStyle={{ backgroundColor: '$color3' }}
+                  pressStyle={{ backgroundColor: '$color1' }}
               >
-                {googleLoading ? 'Connecting...' : 'Google'}
+                <XStack gap="$2" alignItems="center" justifyContent="center">
+                  <View 
+                    backgroundColor="white" 
+                    width={18} 
+                    height={18} 
+                    borderRadius={9} 
+                    alignItems="center" 
+                    justifyContent="center"
+                    shadowColor="$black1"
+                    shadowRadius={2}
+                    shadowOpacity={0.1}
+                  >
+                    <Text fontFamily="$body" fontWeight="900" color="#DB4437" fontSize={11} marginTop={isWeb ? 0 : -1}>G</Text>
+                  </View>
+                  <Text fontFamily="$body" fontWeight="600" color="$color12" fontSize={13}>
+                    {googleLoading ? 'Connecting...' : 'Google'}
+                  </Text>
+                </XStack>
               </Button>
             </XStack>
           </YStack>

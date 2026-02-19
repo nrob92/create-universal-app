@@ -1,4 +1,4 @@
-import { YStack, styled, type GetProps, Text } from 'tamagui';
+import { YStack, styled, type GetProps, Text, View } from 'tamagui';
 
 /**
  * Enhanced Button component with variants for consistent styling across the app.
@@ -24,9 +24,9 @@ const StyledButton = styled(YStack, {
   variants: {
     variant: {
       primary: {
-        bg: '$blue10',
-        hoverStyle: { bg: '$blue11' },
-        pressStyle: { bg: '$blue9', opacity: 0.9 },
+        bg: '$color12',
+        hoverStyle: { bg: '$color11', opacity: 0.9 },
+        pressStyle: { bg: '$color10', opacity: 0.8 },
       },
       secondary: {
         bg: '$color3',
@@ -52,11 +52,11 @@ const StyledButton = styled(YStack, {
         px: '$3',
       },
       medium: {
-        py: '$3',
+        py: '$2.5',
         px: '$4',
       },
       large: {
-        py: '$4',
+        py: '$3',
         px: '$5',
       },
     },
@@ -80,6 +80,7 @@ const StyledButton = styled(YStack, {
 
 export type ButtonProps = GetProps<typeof StyledButton> & {
   onPress?: () => void;
+  icon?: React.ReactNode;
 };
 
 /**
@@ -88,8 +89,8 @@ export type ButtonProps = GetProps<typeof StyledButton> & {
 function ButtonText({ children, variant, sized }: { children: any, variant?: string, sized?: string }) {
   if (typeof children !== 'string') return children;
 
-  const color = variant === 'primary' ? 'white' : '$color12';
-  const fontSize = sized === 'large' ? '$5' : sized === 'small' ? '$2' : '$3';
+  const color = variant === 'primary' ? '$background' : '$color12';
+  const fontSize = sized === 'large' ? '$4' : sized === 'small' ? '$2' : '$3';
   
   return (
     <Text 
@@ -97,6 +98,7 @@ function ButtonText({ children, variant, sized }: { children: any, variant?: str
       fontSize={fontSize} 
       fontWeight="600"
       textAlign="center"
+      fontFamily="$body"
     >
       {children}
     </Text>
@@ -106,7 +108,7 @@ function ButtonText({ children, variant, sized }: { children: any, variant?: str
 /**
  * Main Button component that handles children styling and onPress
  */
-export const Button = ({ children, onPress, variant, sized, ...props }: ButtonProps) => {
+export const Button = ({ children, onPress, variant, sized, icon, ...props }: ButtonProps) => {
   return (
     <StyledButton 
       onPress={onPress} 
@@ -114,6 +116,7 @@ export const Button = ({ children, onPress, variant, sized, ...props }: ButtonPr
       sized={sized} 
       {...props}
     >
+      {icon && <View>{icon}</View>}
       <ButtonText variant={variant} sized={sized}>{children}</ButtonText>
     </StyledButton>
   );

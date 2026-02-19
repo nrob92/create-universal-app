@@ -1,5 +1,5 @@
-import { AuthForm } from '~/features/auth/ui/AuthForm';
+import { AuthScreen } from '~/screens/AuthScreen';
 
 export default function IndexRoute() {
-  return <AuthForm />;
+  return <AuthScreen />;
 }

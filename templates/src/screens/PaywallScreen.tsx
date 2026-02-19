@@ -1,7 +1,7 @@
-import { ScrollView, YStack, H2, H3, Paragraph, XStack, Text, View, LinearGradient, isWeb } from 'tamagui';
+import { ScrollView, YStack, H2, H3, Paragraph, XStack, Text, View, isWeb } from 'tamagui';
 import { Check, Star, Zap, Shield, ArrowLeft } from '@tamagui/lucide-icons';
-import { Button } from '~/interface/buttons/Button';
-import { PageContainer } from '~/interface/layout/PageContainer';
+import { Button } from '~/components/ui/Button';
+import { PageContainer } from '~/components/layout/PageContainer';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,7 +17,7 @@ export function PaywallScreen() {
 
   return (
     <PageContainer backgroundColor="$background">
-      <ScrollView showsVerticalScrollIndicator={false} bounce={false}>
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
         <YStack>
           {/* Immersive Header */}
           <View height={350} width="100%" position="relative">

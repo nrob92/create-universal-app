@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ScrollView, YStack, XStack, H2, Paragraph, Text, View } from 'tamagui';
 import { useAuth } from '~/features/auth/client/useAuth';
-import { FeedCard } from '~/interface/cards/FeedCard';
-import { SafePage } from '~/interface/layout/PageContainer';
+import { FeedCard } from '~/components/blocks/FeedCard';
+import { SafePage } from '~/components/layout/PageContainer';
 
 const FILTERS = ['All', 'Trending', 'New', 'Following'];
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { YStack, XStack, Text, View, H2, Paragraph, AnimatePresence, isWeb } from 'tamagui';
-import { Button } from '~/interface/buttons/Button';
-import { AuthPageContainer } from '~/interface/layout/PageContainer';
+import { Button } from '~/components/ui/Button';
+import { AuthPageContainer } from '~/components/layout/PageContainer';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { haptics } from '~/helpers/haptics';
 import { Heart, Flame, Sparkles, ChevronRight } from '@tamagui/lucide-icons';

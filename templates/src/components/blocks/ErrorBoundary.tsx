@@ -1,6 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 import { YStack, H2, Paragraph } from 'tamagui';
-import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
+import { PrimaryButton } from '~/components/ui/PrimaryButton';
 
 interface Props {
   children: ReactNode;

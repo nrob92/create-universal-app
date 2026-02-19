@@ -1,10 +1,10 @@
 import { XStack, YStack, Paragraph, Text } from 'tamagui';
 import { ChevronRight } from '@tamagui/lucide-icons';
 import type { NamedExoticComponent } from 'react';
-import type { LucideProps } from '@tamagui/lucide-icons';
+import type { IconProps } from '@tamagui/lucide-icons';
 
 interface SettingRowProps {
-  icon: NamedExoticComponent<LucideProps>;
+  icon: React.ElementType;
   label: string;
   value?: string;
   onPress?: () => void;

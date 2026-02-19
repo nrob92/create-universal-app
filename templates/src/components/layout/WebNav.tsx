@@ -2,7 +2,7 @@ import { Link, usePathname, useRouter } from 'expo-router';
 import { XStack, YStack, Text, View, isWeb, styled, Separator, useMedia, Sheet, useTheme, Popover, Avatar } from 'tamagui';
 import { Home, Compass, User, Settings, Star, Menu, LogOut, ChevronDown, CreditCard } from '@tamagui/lucide-icons';
 import { useAuth } from '~/features/auth/client/useAuth';
-import { Button } from '~/interface/buttons/Button';
+import { Button } from '~/components/ui/Button';
 import { useState } from 'react';
 import { PageContainer } from './PageContainer';
 
@@ -129,7 +129,7 @@ export function WebNav() {
             <XStack gap="$4" alignItems="center">
               <Button 
                 variant="ghost" 
-                size="$3"
+                sized="small"
                 icon={<Settings size={18} color="$gray10" />}
                 onPress={() => router.push('/home/settings')}
                 circular
@@ -246,19 +246,12 @@ export function WebNav() {
         open={open}
         onOpenChange={setOpen}
         dismissOnSnapToBottom
-        animationConfig={{
+        transitionConfig={{
             type: 'spring',
             damping: 20,
             stiffness: 250,
         }}
       >
-        <Sheet.Overlay 
-            animation="lazy" 
-            enterStyle={{ opacity: 0 }} 
-            exitStyle={{ opacity: 0 }} 
-            backgroundColor="rgba(0,0,0,0.6)" 
-            backdropFilter="blur(4px)"
-        />
         <Sheet.Frame backgroundColor="$background" padding="$4" gap="$4" borderTopLeftRadius="$8" borderTopRightRadius="$8">
           <Sheet.Handle backgroundColor="rgba(255,255,255,0.1)" width={40} height={4} />
           

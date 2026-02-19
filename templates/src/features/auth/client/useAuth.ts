@@ -56,9 +56,15 @@ export const useAuth = create<AuthState>((set, get) => ({
   isOnboarded: false,
 
   initialize: async () => {
+    const storedOnboarded = await AsyncStorage.getItem(ONBOARDED_KEY);
+    
+    // Quick local check first to avoid flashing UI
+    if (storedOnboarded === 'true') {
+      set({ isOnboarded: true });
+    }
+
     try {
       const storedDemoMode = await AsyncStorage.getItem(DEMO_MODE_KEY);
-      const storedOnboarded = await AsyncStorage.getItem(ONBOARDED_KEY);
       
       if (storedDemoMode === 'true') {
         set({
@@ -82,6 +88,10 @@ export const useAuth = create<AuthState>((set, get) => ({
           .eq('id', session.user.id)
           .single();
         onboarded = !!profile?.onboarded;
+        
+        if (onboarded) {
+           await AsyncStorage.setItem(ONBOARDED_KEY, 'true');
+        }
       }
 
       set({ session, user: session?.user ?? null, loading: false, isOnboarded: onboarded });
@@ -118,12 +128,13 @@ export const useAuth = create<AuthState>((set, get) => ({
     try {
       if (get().isDemoMode) {
         await AsyncStorage.removeItem(DEMO_MODE_KEY);
-        set({ session: null, user: null, isDemoMode: false, isOnboarded: false });
+        // Do NOT remove ONBOARDED_KEY on logout, unless you want them to do it every time
+        set({ session: null, user: null, isDemoMode: false });
         return;
       }
       
       await supabase.auth.signOut();
-      set({ session: null, user: null, isDemoMode: false, isOnboarded: false });
+      set({ session: null, user: null, isDemoMode: false });
     } catch (error) {
       console.error('Error signing out:', error);
     }

@@ -5,7 +5,7 @@ import { H1 as TamaguiH1, H2 as TamaguiH2, H3 as TamaguiH3, H4 as TamaguiH4, sty
  * Use these instead of raw H1-H4 for consistent typography.
  * 
  * @example
- * import { H1, H2, H3, H4 } from '~/interface/text/Headings';
+ * import { H1, H2, H3, H4 } from '~/components/ui/Headings';
  * 
  * <H1>Main Title</H1>
  * <H2>Section Title</H2>

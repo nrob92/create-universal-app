@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { ScrollView, YStack, H2, H3, XStack, View, Text, Paragraph } from 'tamagui';
 import { TrendingUp, Sparkles, Star, User2, Search } from '@tamagui/lucide-icons';
-import { CategoryCard } from '~/interface/cards/CategoryCard';
-import { FeedCard } from '~/interface/cards/FeedCard';
-import { SafePage } from '~/interface/layout/PageContainer';
-import { Input } from '~/interface/forms/Input';
+import { CategoryCard } from '~/components/blocks/CategoryCard';
+import { FeedCard } from '~/components/blocks/FeedCard';
+import { SafePage } from '~/components/layout/PageContainer';
+import { Input } from '~/components/ui/Input';
 
 const CATEGORIES = [
   { icon: TrendingUp, label: 'Trending', backgroundColor: 'rgba(255,112,81,0.1)', iconColor: '$brandPrimary' },

@@ -1,10 +1,10 @@
 import { ScrollView, YStack, H2, H3, Paragraph, Avatar, XStack, Text, Card, Separator, View, isWeb } from 'tamagui';
 import { Star, Settings as SettingsIcon, LogOut, Edit3, ChevronRight, ShoppingBag, Award, Heart } from '@tamagui/lucide-icons';
 import { useAuth } from '~/features/auth/client/useAuth';
-import { usePayments } from '~/features/payments/usePayments';
+import { useBilling } from '~/features/payments/useBilling';
 import { useRouter } from 'expo-router';
-import { Button } from '~/interface/buttons/Button';
-import { SafePage } from '~/interface/layout/PageContainer';
+import { Button } from '~/components/ui/Button';
+import { SafePage } from '~/components/layout/PageContainer';
 
 const RECENT_ACTIVITY = [
   { id: '1', title: 'Ordered Spicy Tuna Roll', date: 'Oct 24, 2023', icon: ShoppingBag, color: '$brandPrimary' },
@@ -24,7 +24,7 @@ function StatItem({ value, label }: { value: string; label: string }) {
 export function ProfileScreen() {
   const user = useAuth((s) => s.user);
   const signOut = useAuth((s) => s.signOut);
-  const { isPro } = usePayments();
+  const { isPro } = useBilling();
   const router = useRouter();
 
   const displayName = user?.email?.split('@')[0] ?? 'Sushi Lover';

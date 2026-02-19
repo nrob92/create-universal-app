@@ -3,7 +3,7 @@
  * Allows showing toasts from anywhere in the app without prop drilling.
  * 
  * @example
- * import { showToast } from '~/interface/toast/emitter';
+ * import { showToast } from '~/components/toast/emitter';
  * 
  * showToast('Success!', { type: 'success' });
  * showToast('Something went wrong', { type: 'error' });
