@@ -244,6 +244,7 @@ async function generatePackageJson(projectDir, projectName, platforms) {
     'expo-linking': '~8.0.0',
     'expo-splash-screen': '~0.30.0',
     'expo-haptics': '~14.0.0',
+    'expo-web-browser': '~15.0.0',
     'react-native-keyboard-controller': '^1.20.0',
   };
 

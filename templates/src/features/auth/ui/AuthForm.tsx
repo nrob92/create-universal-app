@@ -15,9 +15,23 @@ export function AuthForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
   const router = useRouter();
   const signInAsDemo = useAuth((s) => s.signInAsDemo);
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setError('');
+    haptics.medium();
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      haptics.error();
+      setError(err.message);
+      setGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (isSignUp && password !== confirmPassword) {
@@ -201,14 +215,12 @@ export function AuthForm() {
 
               <Button 
                   variant="outlined" 
-                  onPress={() => {
-                    haptics.light();
-                    signInWithGoogle();
-                  }} 
+                  onPress={handleGoogleLogin}
+                  disabled={googleLoading}
                   flex={1}
                   borderColor="$borderColor"
               >
-                Google
+                {googleLoading ? 'Connecting...' : 'Google'}
               </Button>
             </XStack>
           </YStack>

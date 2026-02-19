@@ -1,6 +1,7 @@
 import '@tamagui/native/setup-zeego';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect, type ReactNode } from 'react';
+import * as WebBrowser from 'expo-web-browser';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TamaguiRootProvider } from '~/tamagui/TamaguiRootProvider';
 import { useAuth } from '~/features/auth/client/useAuth';
@@ -9,6 +10,8 @@ import { Spinner } from '~/interface/feedback/Spinner';
 import { validateEnv } from '~/constants/env';
 import { PlatformSpecificRootProvider } from '~/interface/platform/PlatformSpecificRootProvider';
 import { ToastProvider } from '~/interface/toast/Toast';
+
+WebBrowser.maybeCompleteAuthSession();
 
 validateEnv();
 
