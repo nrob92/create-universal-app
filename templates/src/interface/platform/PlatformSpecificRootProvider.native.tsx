@@ -16,7 +16,7 @@ export function PlatformSpecificRootProvider({ children }: { children: ReactNode
   return (
     <KeyboardProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <View flex={1}>{children}</View>
+        <View flex={1} backgroundColor="$background">{children}</View>
       </GestureHandlerRootView>
     </KeyboardProvider>
   );

@@ -1,14 +1,5 @@
-import { Button, type ButtonProps } from 'tamagui';
-
-export function PrimaryButton({ children, ...props }: ButtonProps) {
-  return (
-    <Button
-      theme="active"
-      fontWeight="600"
-      borderRadius="$4"
-      {...props}
-    >
-      {children}
-    </Button>
-  );
-}
+/**
+ * @deprecated Use Button component from './Button' directly with variant prop
+ * This file is kept for backward compatibility and re-exports from Button.tsx
+ */
+export { PrimaryButton, Button, type ButtonProps } from './Button';

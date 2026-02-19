@@ -1,24 +1,25 @@
 import { useState } from 'react';
-import { ScrollView, YStack, XStack, H2, Paragraph, Text } from 'tamagui';
+import { ScrollView, YStack, XStack, H2, Paragraph, Text, View } from 'tamagui';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { FeedCard } from '~/interface/cards/FeedCard';
+import { SafePage } from '~/interface/layout/PageContainer';
 
 const FILTERS = ['All', 'Trending', 'New', 'Following'];
 
 const PLACEHOLDER_ITEMS = [
   {
     id: '1',
-    title: 'Welcome to your feed',
-    description: 'This is a placeholder item. Replace this with your own data source and API calls.',
-    category: 'General',
+    title: 'UniStack Sushi Special',
+    description: 'Freshly scaffolded apps with the finest ingredients: Expo, Tamagui, and Supabase.',
+    category: 'Trending',
     timestamp: 'Just now',
-    likes: 0,
-    comments: 0,
+    likes: 42,
+    comments: 5,
   },
   ...Array.from({ length: 9 }, (_, i) => ({
     id: String(i + 2),
-    title: `Feed item ${i + 2}`,
-    description: 'Placeholder content. Connect your data source to populate this feed with real content.',
+    title: `Delicious Feature ${i + 2}`,
+    description: 'Experience the smooth animations and responsive design of your new universal application.',
     category: i % 3 === 0 ? 'Trending' : i % 3 === 1 ? 'New' : 'General',
     timestamp: `${i + 1}h ago`,
     likes: Math.floor(Math.random() * 100),
@@ -28,16 +29,16 @@ const PLACEHOLDER_ITEMS = [
 
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return 'Ohayou';
+  if (hour < 17) return 'Konnichiwa';
+  return 'Konbanwa';
 }
 
 export function FeedScreen() {
   const [activeFilter, setActiveFilter] = useState('All');
-  const { user } = useAuth();
+  const user = useAuth((s) => s.user);
 
-  const displayName = user?.email?.split('@')[0] ?? 'there';
+  const displayName = user?.email?.split('@')[0] ?? 'Friend';
 
   const filteredItems =
     activeFilter === 'All'
@@ -45,63 +46,81 @@ export function FeedScreen() {
       : PLACEHOLDER_ITEMS.filter((item) => item.category === activeFilter);
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <YStack padding="$4" gap="$4" paddingBottom="$8">
-        {/* Greeting header */}
-        <YStack gap="$1">
-          <Paragraph color="$gray10" fontSize="$3">
-            {getGreeting()},
-          </Paragraph>
-          <H2 textTransform="capitalize">{displayName}</H2>
-        </YStack>
-
-        {/* Filter chips */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <XStack gap="$2" paddingRight="$4">
-            {FILTERS.map((filter) => {
-              const isActive = filter === activeFilter;
-              return (
-                <XStack
-                  key={filter}
-                  paddingHorizontal="$3"
-                  paddingVertical="$2"
-                  borderRadius="$10"
-                  backgroundColor={isActive ? '$blue10' : '$backgroundStrong'}
-                  borderWidth={1}
-                  borderColor={isActive ? '$blue10' : '$borderColor'}
-                  onPress={() => setActiveFilter(filter)}
-                  cursor="pointer"
-                  pressStyle={{ opacity: 0.8 }}
-                  animation="quick"
-                >
-                  <Text
-                    fontSize="$3"
-                    fontWeight="600"
-                    color={isActive ? 'white' : '$gray10'}
-                  >
-                    {filter}
-                  </Text>
-                </XStack>
-              );
-            })}
+    <SafePage>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <YStack padding="$5" gap="$6" paddingBottom="$10">
+          {/* Greeting header */}
+          <XStack justifyContent="space-between" alignItems="center">
+            <YStack>
+              <Paragraph color="$gray10" fontSize={16} fontWeight="600">
+                {getGreeting()},
+              </Paragraph>
+              <H2 fontSize={32} fontWeight="800" letterSpacing={-1}>
+                {displayName} 🍣
+              </H2>
+            </YStack>
+            <View 
+              width={50} 
+              height={50} 
+              borderRadius={25} 
+              backgroundColor="$backgroundStrong" 
+              borderWidth={2} 
+              borderColor="$brandPrimary"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Text fontSize={20}>{displayName[0]?.toUpperCase()}</Text>
+            </View>
           </XStack>
-        </ScrollView>
 
-        {/* Feed items */}
-        <YStack gap="$3">
-          {filteredItems.map((item) => (
-            <FeedCard
-              key={item.id}
-              title={item.title}
-              description={item.description}
-              category={item.category}
-              timestamp={item.timestamp}
-              likes={item.likes}
-              comments={item.comments}
-            />
-          ))}
+          {/* Filter chips */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <XStack gap="$3">
+              {FILTERS.map((filter) => {
+                const isActive = filter === activeFilter;
+                return (
+                  <View
+                    key={filter}
+                    paddingHorizontal="$5"
+                    paddingVertical="$2.5"
+                    borderRadius="$10"
+                    backgroundColor={isActive ? '$brandPrimary' : '$backgroundStrong'}
+                    borderWidth={2}
+                    borderColor={isActive ? '$brandPrimary' : '$borderColor'}
+                    onPress={() => setActiveFilter(filter)}
+                    cursor="pointer"
+                    pressStyle={{ scale: 0.95, opacity: 0.8 }}
+                    animation="quick"
+                  >
+                    <Text
+                      fontSize={14}
+                      fontWeight="700"
+                      color={isActive ? 'white' : '$gray11'}
+                    >
+                      {filter}
+                    </Text>
+                  </View>
+                );
+              })}
+            </XStack>
+          </ScrollView>
+
+          {/* Feed items */}
+          <YStack gap="$5">
+            {filteredItems.map((item) => (
+              <FeedCard
+                key={item.id}
+                title={item.title}
+                description={item.description}
+                category={item.category}
+                timestamp={item.timestamp}
+                likes={item.likes}
+                comments={item.comments}
+              />
+            ))}
+          </YStack>
         </YStack>
-      </YStack>
-    </ScrollView>
+      </ScrollView>
+    </SafePage>
   );
 }

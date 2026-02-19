@@ -1,127 +1,203 @@
-import { ScrollView, YStack, H2, H3, Paragraph, Avatar, XStack, Text, Card, Separator } from 'tamagui';
-import { Star } from '@tamagui/lucide-icons';
+import { ScrollView, YStack, H2, H3, Paragraph, Avatar, XStack, Text, Card, Separator, View, isWeb } from 'tamagui';
+import { Star, Settings as SettingsIcon, LogOut, Edit3, ChevronRight, ShoppingBag, Award, Heart } from '@tamagui/lucide-icons';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { usePayments } from '~/features/payments/usePayments';
 import { useRouter } from 'expo-router';
-import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
+import { Button } from '~/interface/buttons/Button';
+import { SafePage } from '~/interface/layout/PageContainer';
 
-const PLACEHOLDER_ACTIVITY = [
-  { id: '1', title: 'Liked a post', timestamp: '2h ago' },
-  { id: '2', title: 'Left a comment', timestamp: '5h ago' },
-  { id: '3', title: 'Joined the community', timestamp: '3d ago' },
+const RECENT_ACTIVITY = [
+  { id: '1', title: 'Ordered Spicy Tuna Roll', date: 'Oct 24, 2023', icon: ShoppingBag, color: '$brandPrimary' },
+  { id: '2', title: 'Earned "Ginger King" Badge', date: 'Oct 20, 2023', icon: Award, color: '$brandAccent' },
+  { id: '3', title: 'Favorited Omakase Special', date: 'Oct 15, 2023', icon: Heart, color: '$brandSecondary' },
 ];
 
-interface StatColumnProps {
-  value: string;
-  label: string;
-}
-
-function StatColumn({ value, label }: StatColumnProps) {
+function StatItem({ value, label }: { value: string; label: string }) {
   return (
     <YStack alignItems="center" gap="$1" flex={1}>
-      <Text fontWeight="700" fontSize="$6">{value}</Text>
-      <Paragraph color="$gray10" fontSize="$2">{label}</Paragraph>
+      <Text fontWeight="900" fontSize={22} color="$color">{value}</Text>
+      <Text color="$gray9" fontSize={11} fontWeight="800" textTransform="uppercase" letterSpacing={1}>{label}</Text>
     </YStack>
   );
 }
 
 export function ProfileScreen() {
-  const { user } = useAuth();
+  const user = useAuth((s) => s.user);
+  const signOut = useAuth((s) => s.signOut);
   const { isPro } = usePayments();
   const router = useRouter();
 
-  const displayName = user?.email?.split('@')[0] ?? 'Guest';
+  const displayName = user?.email?.split('@')[0] ?? 'Sushi Lover';
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <YStack paddingBottom="$8">
-        {/* Header band */}
-        <YStack
-          backgroundColor="$blue10"
-          height={100}
-        />
-
-        {/* Avatar overlapping band */}
-        <YStack alignItems="center" marginTop={-50} gap="$3" paddingHorizontal="$4">
-          <Avatar circular size="$12" borderWidth={4} borderColor="$background">
-            <Avatar.Fallback backgroundColor="$blue8">
-              <Text color="white" fontSize="$8" fontWeight="700">
-                {displayName[0]?.toUpperCase()}
-              </Text>
-            </Avatar.Fallback>
-          </Avatar>
-
-          <YStack alignItems="center" gap="$1">
-            <H2 textTransform="capitalize">{displayName}</H2>
-            <XStack alignItems="center" gap="$1">
-              {isPro && <Star size={14} color="$yellow10" fill="$yellow10" />}
-              <Paragraph color="$gray10">
-                {isPro ? 'Pro Member' : 'Free Tier'}
-              </Paragraph>
+    <SafePage>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <YStack paddingBottom="$10">
+          {/* Decorative Header */}
+          <View
+            backgroundColor="$brandPrimary"
+            height={160}
+            borderBottomLeftRadius="$10"
+            borderBottomRightRadius="$10"
+            position="relative"
+            overflow="hidden"
+          >
+            <View position="absolute" top={-50} right={-30} width={150} height={150} borderRadius={75} backgroundColor="white" opacity={0.1} />
+            <XStack justifyContent="flex-end" p="$5">
+              <View 
+                backgroundColor="rgba(255,255,255,0.2)" 
+                p="$2.5" 
+                borderRadius="$10" 
+                onPress={() => router.push('/home/settings')}
+              >
+                <SettingsIcon size={20} color="white" />
+              </View>
             </XStack>
-          </YStack>
+          </View>
 
-          {/* Stats row */}
-          <Card width="100%" maxWidth={380} bordered padding="$4" borderRadius="$5">
-            <XStack>
-              <StatColumn value="24" label="Posts" />
-              <Separator vertical marginHorizontal="$2" />
-              <StatColumn value="1.2k" label="Followers" />
-              <Separator vertical marginHorizontal="$2" />
-              <StatColumn value="348" label="Following" />
-            </XStack>
-          </Card>
+          {/* Profile Info Section */}
+          <YStack alignItems="center" marginTop={-70} gap="$4" paddingHorizontal="$5">
+            <YStack position="relative">
+              <Avatar circular size="$14" borderWidth={6} borderColor="$background" shadowColor="$black1" shadowRadius={20} shadowOpacity={0.3}>
+                <Avatar.Fallback backgroundColor="$brandPrimary">
+                  <Text color="white" fontSize={48} fontWeight="900">
+                    {displayName[0]?.toUpperCase()}
+                  </Text>
+                </Avatar.Fallback>
+              </Avatar>
+              <View 
+                position="absolute" 
+                bottom={5} 
+                right={5} 
+                backgroundColor="$brandSecondary" 
+                p="$2" 
+                borderRadius="$10" 
+                borderWidth={4} 
+                borderColor="$background"
+              >
+                <Edit3 size={16} color="white" />
+              </View>
+            </YStack>
 
-          {/* Pro upsell banner */}
-          {!isPro && (
-            <Card
-              width="100%"
-              maxWidth={380}
-              backgroundColor="$blue10"
-              padding="$4"
-              borderRadius="$5"
+            <YStack alignItems="center" gap="$1">
+              <H2 fontWeight="900" fontSize={34} letterSpacing={-1.5} textTransform="capitalize">
+                {displayName}
+              </H2>
+              <XStack alignItems="center" gap="$2" backgroundColor="$backgroundStrong" px="$4" py="$1.5" borderRadius="$10" borderWidth={1} borderColor="$borderColor">
+                <Star size={14} color={isPro ? "$brandAccent" : "$gray8"} fill={isPro ? "$brandAccent" : "transparent"} />
+                <Text color="$gray11" fontWeight="800" fontSize={12} textTransform="uppercase" letterSpacing={1}>
+                  {isPro ? 'Pro Master' : 'Sushi Novice'}
+                </Text>
+              </XStack>
+            </YStack>
+
+            {/* Stats Card */}
+            <XStack 
+                width="100%" 
+                maxWidth={420} 
+                backgroundColor="$backgroundStrong" 
+                p="$6" 
+                borderRadius="$9" 
+                borderWidth={1} 
+                borderColor="$borderColor"
+                shadowColor="$black1"
+                shadowRadius={15}
+                shadowOpacity={0.05}
             >
-              <YStack gap="$3">
-                <YStack gap="$1">
-                  <H3 color="white" fontSize="$5">Unlock Pro features</H3>
-                  <Paragraph color="rgba(255,255,255,0.8)" fontSize="$3">
-                    Get unlimited access, advanced analytics, and priority support.
-                  </Paragraph>
-                </YStack>
-                <PrimaryButton
+              <StatItem value="142" label="Orders" />
+              <Separator vertical marginHorizontal="$2" borderColor="$borderColor" opacity={0.5} />
+              <StatItem value="5.2k" label="Points" />
+              <Separator vertical marginHorizontal="$2" borderColor="$borderColor" opacity={0.5} />
+              <StatItem value="18" label="Badges" />
+            </XStack>
+
+            {/* Pro Banner */}
+            {!isPro && (
+              <YStack
+                width="100%"
+                maxWidth={420}
+                backgroundColor="$brandPrimary"
+                padding="$6"
+                borderRadius="$9"
+                gap="$4"
+                shadowColor="$brandPrimary"
+                shadowRadius={25}
+                shadowOpacity={0.3}
+              >
+                <XStack justifyContent="space-between" alignItems="center">
+                    <YStack gap="$1" flex={1}>
+                        <H3 color="white" fontSize={22} fontWeight="900">Get Pro Master</H3>
+                        <Paragraph color="rgba(255,255,255,0.9)" fontSize={14} fontWeight="600" lineHeight={20}>
+                            Unlock free delivery and double points on every Salmon Roll.
+                        </Paragraph>
+                    </YStack>
+                    <Star size={40} color="white" opacity={0.3} fill="white" />
+                </XStack>
+                <Button
                   backgroundColor="white"
-                  color="$blue10"
+                  sized="medium"
                   onPress={() => router.push('/home/paywall')}
                 >
-                  Upgrade to Pro
-                </PrimaryButton>
+                  <Text color="$brandPrimary" fontWeight="900">Upgrade for $9.99</Text>
+                </Button>
               </YStack>
-            </Card>
-          )}
+            )}
 
-          {/* Recent Activity */}
-          <YStack width="100%" maxWidth={380} gap="$3" marginTop="$2">
-            <H3 fontSize="$5">Recent Activity</H3>
-            <Card bordered borderRadius="$5" overflow="hidden">
-              {PLACEHOLDER_ACTIVITY.map((item, idx) => (
-                <YStack key={item.id}>
-                  <XStack
-                    padding="$4"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Paragraph fontWeight="500">{item.title}</Paragraph>
-                    <Paragraph color="$gray9" fontSize="$2">{item.timestamp}</Paragraph>
-                  </XStack>
-                  {idx < PLACEHOLDER_ACTIVITY.length - 1 && (
-                    <Separator />
-                  )}
-                </YStack>
-              ))}
-            </Card>
+            {/* Activity List */}
+            <YStack width="100%" maxWidth={420} gap="$4" marginTop="$2">
+              <XStack justifyContent="space-between" alignItems="flex-end" px="$2">
+                <H3 fontSize={20} fontWeight="900" letterSpacing={-0.5}>Recent Activity</H3>
+                <Text color="$brandPrimary" fontWeight="800" fontSize={13}>View All</Text>
+              </XStack>
+              
+              <YStack backgroundColor="$backgroundStrong" borderRadius="$9" borderWidth={1} borderColor="$borderColor" overflow="hidden">
+                {RECENT_ACTIVITY.map((activity, idx) => (
+                  <YStack key={activity.id}>
+                    <XStack 
+                        padding="$4"
+                        alignItems="center"
+                        gap="$4"
+                        pressStyle={{ backgroundColor: 'rgba(0,0,0,0.02)' }}
+                    >
+                        <View backgroundColor={activity.color} p="$2.5" borderRadius="$6" opacity={0.15}>
+                            <activity.icon size={18} color={activity.color} />
+                        </View>
+                        <YStack flex={1} gap="$0.5">
+                            <Text fontWeight="800" fontSize={15}>{activity.title}</Text>
+                            <Text color="$gray10" fontSize={12} fontWeight="600">{activity.date}</Text>
+                        </YStack>
+                        <ChevronRight size={16} color="$gray8" />
+                    </XStack>
+                    {idx < RECENT_ACTIVITY.length - 1 && <Separator borderColor="$borderColor" opacity={0.5} />}
+                  </YStack>
+                ))}
+              </YStack>
+            </YStack>
+
+            {/* Logout Button */}
+            <YStack width="100%" maxWidth={420} marginTop="$6" alignItems="center" gap="$2">
+              <View 
+                paddingVertical="$3" 
+                paddingHorizontal="$6" 
+                borderRadius="$10" 
+                onPress={signOut}
+                pressStyle={{ scale: 0.97, backgroundColor: 'rgba(244, 162, 97, 0.05)' }}
+                hoverStyle={{ backgroundColor: 'rgba(244, 162, 97, 0.05)' }}
+                animation="quick"
+                cursor="pointer"
+              >
+                <XStack gap="$2" alignItems="center">
+                  <LogOut size={16} color="$brandAccent" />
+                  <Text color="$brandAccent" fontWeight="800" fontSize={14} textTransform="uppercase" letterSpacing={1}>
+                    Leave the Sushi Club
+                  </Text>
+                </XStack>
+              </View>
+              <Text color="$gray8" fontSize={11} fontWeight="600">You can always join back later 🍣</Text>
+            </YStack>
           </YStack>
         </YStack>
-      </YStack>
-    </ScrollView>
+      </ScrollView>
+    </SafePage>
   );
 }

@@ -1,210 +1,161 @@
-import { useState, useEffect } from 'react';
-import { ScrollView, YStack, H2, Paragraph, Input, Separator, Card, XStack, Text } from 'tamagui';
-import {
-  User,
-  Mail,
-  Crown,
-  Palette,
-  LogOut,
-  ChevronRight,
-} from '@tamagui/lucide-icons';
-import { useAuth } from '~/features/auth/client/useAuth';
-import { signOut } from '~/features/auth/auth';
-import { usePayments } from '~/features/payments/usePayments';
-import { supabase } from '~/features/auth/client/supabaseClient';
+import { ScrollView, YStack, H2, XStack, Text, View, Separator, Switch, isWeb } from 'tamagui';
+import { ChevronRight, Bell, Shield, CircleUser, CreditCard, HelpCircle, Moon, Star, ArrowLeft } from '@tamagui/lucide-icons';
+import { SafePage } from '~/interface/layout/PageContainer';
+import { useTheme } from '~/tamagui/TamaguiRootProvider';
 import { useRouter } from 'expo-router';
-import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
-import { Spinner } from '~/interface/feedback/Spinner';
-import { ThemeToggle } from '~/features/theme/ThemeToggle';
-import { SettingRow } from '~/interface/layout/SettingRow';
 
-interface Profile {
-  display_name: string | null;
-  avatar_url: string | null;
-  onboarded: boolean;
+interface SettingItemProps {
+  icon: any;
+  label: string;
+  value?: string;
+  hasSwitch?: boolean;
+  isLast?: boolean;
+  onPress?: () => void;
+  switchValue?: boolean;
+  onSwitchChange?: (val: boolean) => void;
 }
 
-function SectionHeader({ label }: { label: string }) {
+function SettingItem({ 
+  icon: Icon, 
+  label, 
+  value, 
+  hasSwitch, 
+  isLast, 
+  onPress,
+  switchValue,
+  onSwitchChange 
+}: SettingItemProps) {
   return (
-    <Text
-      color="$gray10"
-      fontSize="$2"
-      fontWeight="600"
-      textTransform="uppercase"
-      letterSpacing={0.8}
-      paddingHorizontal="$4"
-      paddingTop="$4"
-      paddingBottom="$1"
-    >
-      {label}
-    </Text>
+    <YStack>
+      <XStack 
+        paddingVertical="$4" 
+        alignItems="center" 
+        justifyContent="space-between"
+        onPress={onPress}
+        pressStyle={onPress ? { opacity: 0.7, x: 4 } : undefined}
+        animation="quick"
+      >
+        <XStack gap="$4" alignItems="center">
+          <View backgroundColor="$background" p="$2" borderRadius="$5" borderWidth={1} borderColor="$borderColor">
+            <Icon size={18} color="$brandPrimary" />
+          </View>
+          <Text fontWeight="700" fontSize={16}>{label}</Text>
+        </XStack>
+        
+        <XStack gap="$2" alignItems="center">
+          {value && <Text color="$gray10" fontSize={14} fontWeight="600">{value}</Text>}
+          {hasSwitch ? (
+            <Switch 
+              size="$3" 
+              checked={switchValue} 
+              onCheckedChange={onSwitchChange}
+              backgroundColor={switchValue ? '$brandPrimary' : '$backgroundStrong'}
+            >
+              <Switch.Thumb animation="quick" />
+            </Switch>
+          ) : (
+            onPress && <ChevronRight size={18} color="$gray8" />
+          )}
+        </XStack>
+      </XStack>
+      {!isLast && <Separator borderColor="$borderColor" opacity={0.5} />}
+    </YStack>
   );
 }
 
 export function SettingsScreen() {
-  const { user } = useAuth();
-  const { isPro } = usePayments();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [displayName, setDisplayName] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
-  const [editingName, setEditingName] = useState(false);
-
-  useEffect(() => {
-    async function fetchProfile() {
-      if (!user) return;
-      const { data } = await supabase
-        .from('profiles')
-        .select('display_name, avatar_url, onboarded')
-        .eq('id', user.id)
-        .single();
-
-      if (data) {
-        setProfile(data);
-        setDisplayName(data.display_name ?? '');
-      }
-      setLoading(false);
-    }
-    fetchProfile();
-  }, [user]);
-
-  const handleSave = async () => {
-    if (!user) return;
-    setSaving(true);
-    setMessage('');
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ display_name: displayName })
-      .eq('id', user.id);
-
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage('Profile updated!');
-      setEditingName(false);
-    }
-    setSaving(false);
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
-  };
-
-  if (loading) {
-    return <Spinner label="Loading settings..." />;
-  }
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <YStack paddingBottom="$10">
-        <YStack padding="$4" paddingBottom="$2">
-          <H2>Settings</H2>
-        </YStack>
+    <SafePage>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <YStack padding="$5" gap="$6" paddingBottom="$10">
+          <XStack alignItems="center" gap="$4">
+             <View 
+                p="$2" 
+                borderRadius="$10" 
+                backgroundColor="$backgroundStrong"
+                borderWidth={1}
+                borderColor="$borderColor"
+                onPress={() => router.back()}
+             >
+                <ArrowLeft size={20} color="$color" />
+             </View>
+             <H2 fontSize={32} fontWeight="900" letterSpacing={-1}>Settings</H2>
+          </XStack>
 
-        {/* Account section */}
-        <SectionHeader label="Account" />
-        <Card bordered borderRadius="$5" marginHorizontal="$4" overflow="hidden">
-          {/* Display name row */}
-          <SettingRow
-            icon={User}
-            label="Display Name"
-            value={profile?.display_name ?? 'Not set'}
-            onPress={() => setEditingName((v) => !v)}
-          />
+          {/* Membership Card */}
+          <YStack 
+            backgroundColor="$brandPrimary" 
+            p="$6" 
+            borderRadius="$9" 
+            gap="$4"
+            shadowColor="$brandPrimary"
+            shadowRadius={20}
+            shadowOpacity={0.3}
+            position="relative"
+            overflow="hidden"
+          >
+             {/* Decorative Circles */}
+             <View position="absolute" top={-20} right={-20} width={100} height={100} borderRadius={50} backgroundColor="white" opacity={0.1} />
+             
+             <XStack justifyContent="space-between" alignItems="flex-start">
+                <YStack gap="$1">
+                    <Text color="white" fontWeight="800" fontSize={12} textTransform="uppercase" letterSpacing={1}>
+                        Membership Status
+                    </Text>
+                    <Text color="white" fontWeight="900" fontSize={24}>Sushi Club Pro</Text>
+                </YStack>
+                <View backgroundColor="white" p="$2" borderRadius="$5">
+                    <Star size={20} color="$brandPrimary" fill="$brandPrimary" />
+                </View>
+             </XStack>
 
-          {editingName && (
-            <YStack padding="$4" gap="$3" borderTopWidth={1} borderTopColor="$borderColor">
-              <Input
-                value={displayName}
-                onChangeText={setDisplayName}
-                placeholder="Your name"
-                borderRadius="$4"
-                autoFocus
+             <YStack gap="$1" marginTop="$2">
+                <Text color="rgba(255,255,255,0.8)" fontSize={12} fontWeight="700">Valid until December 2026</Text>
+                <View height={6} width="100%" backgroundColor="rgba(255,255,255,0.2)" borderRadius={3} marginTop="$1">
+                    <View height="100%" width="65%" backgroundColor="white" borderRadius={3} />
+                </View>
+             </YStack>
+          </YStack>
+
+          {/* Account Section */}
+          <YStack gap="$3">
+            <Text color="$gray10" fontWeight="800" fontSize={12} textTransform="uppercase" letterSpacing={1} ml="$2">
+              Personal
+            </Text>
+            <View backgroundColor="$backgroundStrong" px="$4" borderRadius="$9" borderWidth={1} borderColor="$borderColor">
+              <SettingItem icon={CircleUser} label="Account Details" onPress={() => {}} />
+              <SettingItem icon={CreditCard} label="Billing & Subscription" value="Manage" onPress={() => {}} />
+              <SettingItem icon={Shield} label="Privacy & Security" isLast onPress={() => {}} />
+            </View>
+          </YStack>
+
+          {/* App Settings */}
+          <YStack gap="$3">
+            <Text color="$gray10" fontWeight="800" fontSize={12} textTransform="uppercase" letterSpacing={1} ml="$2">
+              App Preferences
+            </Text>
+            <View backgroundColor="$backgroundStrong" px="$4" borderRadius="$9" borderWidth={1} borderColor="$borderColor">
+              <SettingItem 
+                icon={Moon} 
+                label="Dark Mode" 
+                hasSwitch 
+                switchValue={theme === 'dark'}
+                onSwitchChange={toggleTheme}
               />
-              {message !== '' && (
-                <Paragraph
-                  color={message.includes('updated') ? '$green10' : '$red10'}
-                  fontSize="$2"
-                >
-                  {message}
-                </Paragraph>
-              )}
-              <XStack gap="$2">
-                <PrimaryButton
-                  flex={1}
-                  onPress={handleSave}
-                  disabled={saving}
-                  size="$3"
-                >
-                  {saving ? 'Saving...' : 'Save'}
-                </PrimaryButton>
-                <PrimaryButton
-                  flex={1}
-                  theme="gray"
-                  onPress={() => setEditingName(false)}
-                  size="$3"
-                >
-                  Cancel
-                </PrimaryButton>
-              </XStack>
-            </YStack>
-          )}
+              <SettingItem icon={Bell} label="Push Notifications" hasSwitch switchValue={true} />
+              <SettingItem icon={HelpCircle} label="Help Center" isLast onPress={() => {}} />
+            </View>
+          </YStack>
 
-          <Separator />
-
-          <SettingRow
-            icon={Mail}
-            label="Email"
-            value={user?.email ?? '—'}
-            showChevron={false}
-          />
-        </Card>
-
-        {/* Subscription section */}
-        <SectionHeader label="Subscription" />
-        <Card bordered borderRadius="$5" marginHorizontal="$4" overflow="hidden">
-          <SettingRow
-            icon={Crown}
-            label="Plan"
-            value={isPro ? 'Pro' : 'Free'}
-            onPress={!isPro ? () => router.push('/home/paywall') : undefined}
-            showChevron={!isPro}
-          />
-          {!isPro && (
-            <YStack padding="$4" borderTopWidth={1} borderTopColor="$borderColor">
-              <PrimaryButton onPress={() => router.push('/home/paywall')}>
-                Upgrade to Pro
-              </PrimaryButton>
-            </YStack>
-          )}
-        </Card>
-
-        {/* Appearance section */}
-        <SectionHeader label="Appearance" />
-        <Card bordered borderRadius="$5" marginHorizontal="$4" overflow="hidden">
-          <SettingRow
-            icon={Palette}
-            label="Theme"
-            showChevron={false}
-            rightElement={<ThemeToggle />}
-          />
-        </Card>
-
-        {/* Danger zone */}
-        <SectionHeader label="Account Actions" />
-        <Card bordered borderRadius="$5" marginHorizontal="$4" overflow="hidden">
-          <SettingRow
-            icon={LogOut}
-            label="Sign Out"
-            onPress={handleSignOut}
-            destructive
-          />
-        </Card>
-      </YStack>
-    </ScrollView>
+          <YStack alignItems="center" marginTop="$4" gap="$1">
+            <Text color="$gray9" fontSize={12} fontWeight="700">UniStack v1.2.0</Text>
+            <Text color="$gray8" fontSize={11} fontWeight="600">Handcrafted with 🍣 in Tokyo</Text>
+          </YStack>
+        </YStack>
+      </ScrollView>
+    </SafePage>
   );
 }

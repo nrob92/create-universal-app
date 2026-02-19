@@ -1,55 +1,82 @@
 import { Slot, usePathname, useRouter } from 'expo-router';
-import { YStack, XStack, Button, Text } from 'tamagui';
-import { Home, Compass, User, Settings } from '@tamagui/lucide-icons';
+import { YStack, XStack, Button, Text, View, isWeb } from 'tamagui';
+import { Home, Compass, User } from '@tamagui/lucide-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WebNav } from '~/interface/layout/WebNav';
+import { haptics } from '~/helpers/haptics';
 
 const NAV_ITEMS = [
   { label: 'Feed', icon: Home, href: '/home/feed' },
   { label: 'Explore', icon: Compass, href: '/home/explore' },
   { label: 'Profile', icon: User, href: '/home/profile' },
-  { label: 'Settings', icon: Settings, href: '/home/settings' },
 ] as const;
 
 export default function AppLayout() {
   const pathname = usePathname();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const handleNav = (href: string) => {
+    haptics.light();
+    router.push(href as any);
+  };
 
   return (
-    <YStack flex={1}>
-      <YStack flex={1}>
+    <YStack flex={1} backgroundColor="$background">
+      {isWeb && <WebNav />}
+      
+      <View flex={1} paddingTop={isWeb ? 70 : 0}>
         <Slot />
-      </YStack>
+      </View>
 
-      <XStack
-        borderTopWidth={1}
-        borderTopColor="$borderColor"
-        backgroundColor="$background"
-        paddingVertical="$2"
-        paddingBottom="$3"
-        justifyContent="space-around"
-      >
-        {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
-          const isActive = pathname.startsWith(href);
-          return (
-            <Button
-              key={label}
-              chromeless
-              onPress={() => router.push(href)}
-              opacity={isActive ? 1 : 0.45}
-            >
-              <YStack alignItems="center" gap="$1">
-                <Icon size={22} color={isActive ? '$blue10' : '$color'} />
+      {!isWeb && (
+        <XStack
+          borderTopWidth={1}
+          borderTopColor="$borderColor"
+          backgroundColor="$backgroundStrong"
+          paddingTop="$2"
+          paddingBottom={insets.bottom + 8}
+          justifyContent="space-around"
+          shadowColor="$black1"
+          shadowRadius={20}
+          shadowOpacity={0.1}
+        >
+          {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
+            const isActive = pathname.startsWith(href);
+            return (
+              <YStack 
+                key={label} 
+                alignItems="center" 
+                gap="$1"
+                onPress={() => handleNav(href)}
+                pressStyle={{ opacity: 0.7, scale: 0.95 }}
+                cursor="pointer"
+                animation="quick"
+                paddingHorizontal="$4"
+              >
+                <View
+                  backgroundColor={isActive ? 'rgba(255,112,81,0.1)' : 'transparent'}
+                  paddingVertical="$1.5"
+                  paddingHorizontal="$4"
+                  borderRadius="$10"
+                  animation="quick"
+                >
+                  <Icon size={24} color={isActive ? '$brandPrimary' : '$gray10'} />
+                </View>
                 <Text
-                  fontSize="$1"
-                  color={isActive ? '$blue10' : '$color'}
-                  fontWeight={isActive ? '600' : '400'}
+                  fontSize={11}
+                  color={isActive ? '$brandPrimary' : '$gray10'}
+                  fontWeight={isActive ? '800' : '600'}
+                  textTransform="uppercase"
+                  letterSpacing={0.5}
                 >
                   {label}
                 </Text>
               </YStack>
-            </Button>
-          );
-        })}
-      </XStack>
+            );
+          })}
+        </XStack>
+      )}
     </YStack>
   );
 }

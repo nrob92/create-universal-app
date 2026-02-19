@@ -1,100 +1,65 @@
-import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
-import Animated, { SlideInUp, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SizableText, View, YStack } from 'tamagui';
+import { Toast, useToastState } from '@tamagui/toast';
+import { YStack, Text, View, XStack } from 'tamagui';
+import { CheckCircle, AlertCircle, Info } from '@tamagui/lucide-icons';
 
-const BANNER_HEIGHT = 78;
-const TOP_OFFSET = 12;
-const DEFAULT_DURATION = 3000;
-
-interface ToastData {
-  id: number;
-  title: string;
-  message?: string;
-  type?: 'info' | 'success' | 'error' | 'warn';
-}
-
-interface ToastContextValue {
-  toast: ToastData | null;
-  showToast: (title: string, message?: string) => void;
-  hideToast: () => void;
-}
-
-let toastId = 0;
-let showToastFn: ((title: string, message?: string) => void) | null = null;
-let hideToastFn: (() => void) | null = null;
-
-export const ToastContext = {
-  showToast: (title: string, message?: string) => showToastFn?.(title, message),
-  hideToast: () => hideToastFn?.(),
-};
-
-export const ToastProvider = ({ children }: { children: ReactNode }) => {
-  const [toast, setToast] = useState<ToastData | null>(null);
-  const { top } = useSafeAreaInsets();
-  
-  const translateY = useSharedValue(0);
-  const hidden = useSharedValue(false);
-
-  showToastFn = (title: string, message?: string) => {
-    setToast({ id: toastId++, title, message });
-    hidden.value = false;
-  };
-
-  hideToastFn = () => {
-    hidden.value = true;
-  };
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: hidden.value ? 0 : 1,
-  }));
-
+export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {children}
-      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-        {toast && (
-          <Animated.View
-            entering={SlideInUp}
-            style={[
-              {
-                top: top + TOP_OFFSET,
-                position: 'absolute',
-                left: 16,
-                right: 16,
-                zIndex: 9999,
-              },
-              animatedStyle,
-            ]}
-          >
-            <Pressable onPress={() => hideToastFn?.()}>
-              <YStack
-                bg="$color2"
-                rounded="$6"
-                borderWidth={1}
-                borderColor="$color4"
-                px="$4"
-                py="$3"
-              >
-                <SizableText size="$4" fontWeight="600" color="$color12">
-                  {toast.title}
-                </SizableText>
-                {toast.message && (
-                  <SizableText size="$3" color="$color11">
-                    {toast.message}
-                  </SizableText>
-                )}
-              </YStack>
-            </Pressable>
-          </Animated.View>
-        )}
-      </View>
+      <CurrentToast />
     </>
   );
 };
 
-export function showToast(title: string, message?: string) {
-  showToastFn?.(title, message);
+function CurrentToast() {
+  const currentToast = useToastState();
+
+  if (!currentToast || currentToast.isHandledNatively) return null;
+
+  const isError = currentToast.type === 'error';
+  const isSuccess = currentToast.type === 'success';
+  const Icon = isError ? AlertCircle : isSuccess ? CheckCircle : Info;
+  const color = isError ? '$brandTuna' : isSuccess ? '$brandSecondary' : '$brandPrimary';
+
+  return (
+    <Toast
+      key={currentToast.id}
+      duration={currentToast.duration}
+      enterStyle={{ opacity: 0, scale: 0.5, y: -20 }}
+      exitStyle={{ opacity: 0, scale: 0.5, y: -20 }}
+      y={0}
+      opacity={1}
+      scale={1}
+      animation="quick"
+      viewportName={currentToast.viewportName}
+    >
+      <View 
+        backgroundColor="$backgroundStrong" 
+        p="$4" 
+        borderRadius="$10" 
+        borderWidth={2} 
+        borderColor={color}
+        shadowColor="$black1"
+        shadowRadius={20}
+        shadowOpacity={0.2}
+        minWidth={280}
+        maxWidth="90%"
+        alignSelf="center"
+      >
+        <XStack gap="$3" alignItems="center">
+          <Icon size={20} color={color} />
+          <YStack flex={1}>
+            <Toast.Title fontWeight="800" fontSize={15} color="$color">
+              {currentToast.title}
+            </Toast.Title>
+            {currentToast.message && (
+              <Toast.Description color="$gray10" fontSize={13} fontWeight="600">
+                {currentToast.message}
+              </Toast.Description>
+            )}
+          </YStack>
+        </XStack>
+      </View>
+    </Toast>
+  );
 }

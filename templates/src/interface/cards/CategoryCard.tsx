@@ -1,4 +1,4 @@
-import { Card, Text, YStack } from 'tamagui';
+import { Card, Text, YStack, View } from 'tamagui';
 import type { NamedExoticComponent } from 'react';
 import type { LucideProps } from '@tamagui/lucide-icons';
 
@@ -21,16 +21,31 @@ export function CategoryCard({
     <Card
       flex={1}
       bordered
-      padding="$4"
-      borderRadius="$5"
-      backgroundColor={backgroundColor as any}
-      pressStyle={{ opacity: 0.8, scale: 0.98 }}
+      padding="$5"
+      borderRadius="$8"
+      backgroundColor="$backgroundStrong"
+      borderWidth={2}
+      borderColor="$borderColor"
+      pressStyle={{ scale: 0.96 }}
+      hoverStyle={{ borderColor: '$brandPrimary' }}
       onPress={onPress}
       animation="quick"
+      shadowColor="$shadowColor"
+      shadowRadius={10}
+      shadowOpacity={0.1}
     >
-      <YStack gap="$2" alignItems="flex-start">
-        <Icon size={22} color={iconColor as any} />
-        <Text fontWeight="600" fontSize="$3">
+      <YStack gap="$3" alignItems="center" justifyContent="center">
+        <View 
+          backgroundColor={backgroundColor as any} 
+          p="$3" 
+          borderRadius="$6"
+          shadowColor={iconColor as any}
+          shadowRadius={10}
+          shadowOpacity={0.2}
+        >
+          <Icon size={24} color={iconColor as any} />
+        </View>
+        <Text fontWeight="800" fontSize={14} color="$color" textTransform="uppercase" letterSpacing={1}>
           {label}
         </Text>
       </YStack>

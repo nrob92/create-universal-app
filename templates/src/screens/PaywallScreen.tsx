@@ -1,282 +1,200 @@
-import { useState, useEffect } from 'react';
-import { ScrollView, YStack, H2, H3, Paragraph, Card, XStack, Text, Separator } from 'tamagui';
-import { Platform } from 'react-native';
-import { Check, Zap } from '@tamagui/lucide-icons';
-import { PrimaryButton } from '~/interface/buttons/PrimaryButton';
+import { ScrollView, YStack, H2, H3, Paragraph, XStack, Text, View, LinearGradient, isWeb } from 'tamagui';
+import { Check, Star, Zap, Shield, ArrowLeft } from '@tamagui/lucide-icons';
+import { Button } from '~/interface/buttons/Button';
 import { PageContainer } from '~/interface/layout/PageContainer';
-import { LoadingState } from '~/interface/feedback/LoadingState';
-import { usePayments } from '~/features/payments/usePayments';
-import { supabase } from '~/features/auth/client/supabaseClient';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const PRO_FEATURES = [
-  'Unlimited access to all content',
-  'Priority customer support',
-  'Advanced analytics dashboard',
-  'Early access to new features',
-  'No ads, ever',
+const FEATURES = [
+  { title: 'Unlimited Sushi Orders', icon: Zap, description: 'No limits on how many rolls you can explore.' },
+  { title: 'Exclusive Masterclass', icon: Star, description: 'Access private guides from world-class chefs.' },
+  { title: 'Priority Delivery', icon: Shield, description: 'Your sushi arrives first, every single time.' },
 ];
 
-interface Plan {
-  id: number;
-  name: string;
-  slug: string;
-  price_monthly: number | null;
-  price_yearly: number | null;
-  currency: string;
-  description: string | null;
-  features: string[];
-  is_active: boolean;
-  is_popular?: boolean;
-}
-
-type BillingCycle = 'monthly' | 'yearly';
-
 export function PaywallScreen() {
-  const { isPro } = usePayments();
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [purchasing, setPurchasing] = useState(false);
-  const [billing, setBilling] = useState<BillingCycle>('monthly');
-
-  useEffect(() => {
-    async function fetchPlans() {
-      const { data, error: fetchError } = await supabase
-        .from('plans')
-        .select('*')
-        .eq('is_active', true)
-        .order('price_monthly', { ascending: true });
-
-      if (fetchError) {
-        setError(fetchError.message);
-      } else {
-        // Mark the middle plan as popular
-        const tagged = (data ?? []).map((p: Plan, i: number, arr: Plan[]) => ({
-          ...p,
-          is_popular: arr.length > 1 && i === Math.floor(arr.length / 2),
-        }));
-        setPlans(tagged);
-      }
-      setLoading(false);
-    }
-    fetchPlans();
-  }, []);
-
-  const handlePurchase = async (plan: Plan) => {
-    setPurchasing(true);
-    try {
-      if (Platform.OS === 'web') {
-        // Stripe web checkout — replace with your price ID mapping
-        const { redirectToCheckout } = await import('~/features/payments/stripeWeb');
-        await redirectToCheckout({
-          priceId: plan.slug, // Map to your Stripe price ID
-          successUrl: `${window.location.origin}/home/feed?success=true`,
-          cancelUrl: `${window.location.origin}/home/paywall`,
-        });
-      } else {
-        // RevenueCat mobile purchase
-        const { fetchOfferings, purchasePackage, checkProStatus } = await import(
-          '~/features/payments/revenueCat'
-        );
-        const packages = await fetchOfferings();
-        const pkg = packages[0]; // Use first available package
-        if (pkg) {
-          await purchasePackage(pkg);
-          const isNowPro = await checkProStatus();
-          usePayments.getState().setIsPro(isNowPro);
-        }
-      }
-    } catch (err: any) {
-      setError(err.message ?? 'Purchase failed');
-    } finally {
-      setPurchasing(false);
-    }
-  };
-
-  const getPrice = (plan: Plan) => {
-    if (billing === 'yearly' && plan.price_yearly != null) {
-      return plan.price_yearly;
-    }
-    return plan.price_monthly;
-  };
-
-  if (isPro) {
-    return (
-      <PageContainer>
-        <YStack gap="$4" alignItems="center" maxWidth={380} width="100%">
-          <YStack
-            width={64}
-            height={64}
-            borderRadius="$6"
-            backgroundColor="$blue10"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Zap size={32} color="white" />
-          </YStack>
-          <H2 textAlign="center">You're on Pro!</H2>
-          <Paragraph color="$gray10" textAlign="center">
-            You have full access to all premium features. Thank you for your support.
-          </Paragraph>
-          <Card bordered borderRadius="$5" width="100%" padding="$4">
-            <YStack gap="$3">
-              <H3 fontSize="$4">Your benefits</H3>
-              {PRO_FEATURES.map((f) => (
-                <XStack key={f} gap="$2" alignItems="center">
-                  <Check size={16} color="$green10" />
-                  <Paragraph fontSize="$3">{f}</Paragraph>
-                </XStack>
-              ))}
-            </YStack>
-          </Card>
-        </YStack>
-      </PageContainer>
-    );
-  }
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <YStack padding="$4" gap="$5" paddingBottom="$10" alignItems="center">
-        {/* Header */}
-        <YStack gap="$2" alignItems="center" maxWidth={380}>
-          <H2 textAlign="center">Upgrade to Pro</H2>
-          <Paragraph color="$gray10" textAlign="center">
-            Unlock everything and build without limits.
-          </Paragraph>
-        </YStack>
+    <PageContainer backgroundColor="$background">
+      <ScrollView showsVerticalScrollIndicator={false} bounce={false}>
+        <YStack>
+          {/* Immersive Header */}
+          <View height={350} width="100%" position="relative">
+             <View 
+                position="absolute" 
+                top={0} 
+                left={0} 
+                right={0} 
+                bottom={0} 
+                backgroundColor="$brandPrimary"
+                borderBottomLeftRadius="$10"
+                borderBottomRightRadius="$10"
+                overflow="hidden"
+             >
+                {/* Decorative Pattern / Glow */}
+                <View 
+                    position="absolute" 
+                    top={-50} 
+                    right={-50} 
+                    width={200} 
+                    height={200} 
+                    borderRadius={100} 
+                    backgroundColor="white" 
+                    opacity={0.15} 
+                />
+             </View>
 
-        {/* Billing toggle */}
-        <XStack
-          backgroundColor="$backgroundStrong"
-          borderRadius="$10"
-          padding="$1"
-          gap="$1"
-        >
-          {(['monthly', 'yearly'] as BillingCycle[]).map((cycle) => (
-            <XStack
-              key={cycle}
-              paddingHorizontal="$4"
-              paddingVertical="$2"
-              borderRadius="$10"
-              backgroundColor={billing === cycle ? '$blue10' : 'transparent'}
-              onPress={() => setBilling(cycle)}
-              cursor="pointer"
-              animation="quick"
-              gap="$2"
-              alignItems="center"
+            <YStack 
+                paddingTop={isWeb ? "$6" : insets.top + 10} 
+                paddingHorizontal="$5" 
+                gap="$6"
+                alignItems="center"
             >
-              <Text
-                color={billing === cycle ? 'white' : '$gray10'}
-                fontWeight="600"
-                fontSize="$3"
-                textTransform="capitalize"
-              >
-                {cycle}
-              </Text>
-              {cycle === 'yearly' && (
-                <XStack
-                  backgroundColor={billing === 'yearly' ? 'rgba(255,255,255,0.2)' : '$green3'}
-                  paddingHorizontal="$2"
-                  paddingVertical="$0.5"
-                  borderRadius="$10"
+              <XStack width="100%" justifyContent="flex-start">
+                <View 
+                    p="$2" 
+                    borderRadius="$10" 
+                    backgroundColor="rgba(255,255,255,0.2)"
+                    onPress={() => router.back()}
                 >
-                  <Text
-                    fontSize="$1"
-                    fontWeight="700"
-                    color={billing === 'yearly' ? 'white' : '$green10'}
-                  >
-                    Save 20%
-                  </Text>
-                </XStack>
-              )}
-            </XStack>
-          ))}
-        </XStack>
+                    <ArrowLeft size={20} color="white" />
+                </View>
+              </XStack>
 
-        {/* Plan cards */}
-        <LoadingState loading={loading} error={error}>
-          <YStack gap="$3" width="100%" maxWidth={400}>
-            {plans.map((plan) => {
-              const price = getPrice(plan);
-              return (
-                <YStack key={plan.id} position="relative">
-                  {plan.is_popular && (
-                    <XStack
-                      position="absolute"
-                      top={-10}
-                      alignSelf="center"
-                      zIndex={10}
-                      backgroundColor="$blue10"
-                      paddingHorizontal="$3"
-                      paddingVertical="$1"
-                      borderRadius="$10"
-                    >
-                      <Text color="white" fontSize="$2" fontWeight="700">
-                        Most Popular
-                      </Text>
-                    </XStack>
-                  )}
-                  <Card
-                    bordered
-                    padding="$4"
-                    borderRadius="$5"
-                    borderColor={plan.is_popular ? '$blue8' : '$borderColor'}
-                    borderWidth={plan.is_popular ? 2 : 1}
-                  >
-                    <YStack gap="$3">
-                      <XStack justifyContent="space-between" alignItems="flex-start">
-                        <YStack gap="$1">
-                          <Text fontWeight="700" fontSize="$5">{plan.name}</Text>
-                          {plan.description && (
-                            <Paragraph color="$gray10" fontSize="$3">
-                              {plan.description}
-                            </Paragraph>
-                          )}
-                        </YStack>
-                        {price != null && (
-                          <YStack alignItems="flex-end">
-                            <XStack alignItems="baseline" gap="$1">
-                              <Text fontWeight="800" fontSize="$8" color="$blue10">
-                                ${price}
-                              </Text>
-                              <Text color="$gray10" fontSize="$2">
-                                /{billing === 'yearly' ? 'yr' : 'mo'}
-                              </Text>
-                            </XStack>
-                          </YStack>
-                        )}
-                      </XStack>
-
-                      <Separator />
-
-                      <YStack gap="$2">
-                        {plan.features.map((feature, i) => (
-                          <XStack key={i} gap="$2" alignItems="center">
-                            <Check size={15} color="$green10" />
-                            <Paragraph fontSize="$3">{feature}</Paragraph>
-                          </XStack>
-                        ))}
-                      </YStack>
-
-                      <PrimaryButton
-                        onPress={() => handlePurchase(plan)}
-                        disabled={purchasing}
-                        theme={plan.is_popular ? undefined : 'gray'}
-                      >
-                        {purchasing ? 'Processing...' : `Get ${plan.name}`}
-                      </PrimaryButton>
-                    </YStack>
-                  </Card>
+              <YStack alignItems="center" gap="$3">
+                <View 
+                    backgroundColor="white" 
+                    p="$4" 
+                    borderRadius="$9"
+                    shadowColor="$black1"
+                    shadowRadius={20}
+                    shadowOpacity={0.2}
+                >
+                    <Star size={40} color="$brandPrimary" fill="$brandPrimary" />
+                </View>
+                <YStack alignItems="center" gap="$1">
+                    <H2 color="white" fontWeight="900" fontSize={38} letterSpacing={-1.5} textAlign="center">
+                        PRO MASTER
+                    </H2>
+                    <View backgroundColor="rgba(255,255,255,0.2)" px="$3" py="$1" borderRadius="$10">
+                        <Text color="white" fontWeight="800" fontSize={12} textTransform="uppercase" letterSpacing={1}>
+                            Elevate your experience
+                        </Text>
+                    </View>
                 </YStack>
-              );
-            })}
-          </YStack>
-        </LoadingState>
+              </YStack>
+            </YStack>
+          </View>
 
-        <Paragraph color="$gray9" fontSize="$2" textAlign="center">
-          Cancel anytime. No hidden fees.
-        </Paragraph>
-      </YStack>
-    </ScrollView>
+          {/* Content Section */}
+          <YStack 
+            paddingHorizontal="$5" 
+            marginTop={-40} 
+            gap="$8" 
+            paddingBottom={insets.bottom + 40}
+          >
+            {/* Features Card */}
+            <YStack 
+                backgroundColor="$backgroundStrong" 
+                p="$6" 
+                borderRadius="$9" 
+                borderWidth={1} 
+                borderColor="$borderColor"
+                gap="$6"
+                shadowColor="$black1"
+                shadowRadius={30}
+                shadowOpacity={0.1}
+            >
+                {FEATURES.map((feature, idx) => (
+                    <XStack key={idx} gap="$4" alignItems="center">
+                        <View backgroundColor="rgba(255,112,81,0.1)" p="$2.5" borderRadius="$6">
+                            <feature.icon size={20} color="$brandPrimary" />
+                        </View>
+                        <YStack flex={1}>
+                            <Text fontWeight="800" fontSize={16}>{feature.title}</Text>
+                            <Text color="$gray10" fontSize={13}>{feature.description}</Text>
+                        </YStack>
+                    </XStack>
+                ))}
+            </YStack>
+
+            {/* Plan Selection */}
+            <YStack gap="$4">
+                <Text color="$gray10" fontWeight="800" fontSize={12} textTransform="uppercase" letterSpacing={1} textAlign="center">
+                    Select a Plan
+                </Text>
+                
+                <YStack 
+                    backgroundColor="$backgroundStrong" 
+                    p="$5" 
+                    borderRadius="$9" 
+                    borderWidth={2} 
+                    borderColor="$brandPrimary"
+                    position="relative"
+                >
+                    <View 
+                        position="absolute" 
+                        top={-12} 
+                        right={20} 
+                        backgroundColor="$brandPrimary" 
+                        px="$3" 
+                        py="$1" 
+                        borderRadius="$10"
+                    >
+                        <Text color="white" fontWeight="800" fontSize={10} textTransform="uppercase">Most Popular</Text>
+                    </View>
+
+                    <XStack justifyContent="space-between" alignItems="center">
+                        <YStack>
+                            <Text fontWeight="800" fontSize={20}>Annual Master</Text>
+                            <Text color="$gray10" fontSize={14}>Save 40% yearly</Text>
+                        </YStack>
+                        <YStack alignItems="flex-end">
+                            <Text fontSize={24} fontWeight="900">$5.99</Text>
+                            <Text color="$gray9" fontSize={12}>/month</Text>
+                        </YStack>
+                    </XStack>
+                </YStack>
+
+                <YStack 
+                    backgroundColor="$backgroundStrong" 
+                    p="$5" 
+                    borderRadius="$9" 
+                    borderWidth={1} 
+                    borderColor="$borderColor"
+                >
+                    <XStack justifyContent="space-between" alignItems="center">
+                        <YStack>
+                            <Text fontWeight="800" fontSize={20}>Monthly Novice</Text>
+                            <Text color="$gray10" fontSize={14}>Flexible, cancel anytime</Text>
+                        </YStack>
+                        <YStack alignItems="flex-end">
+                            <Text fontSize={24} fontWeight="900">$9.99</Text>
+                            <Text color="$gray9" fontSize={12}>/month</Text>
+                        </YStack>
+                    </XStack>
+                </YStack>
+            </YStack>
+
+            {/* Action Buttons */}
+            <YStack gap="$4">
+                <Button variant="primary" sized="large" shadowColor="$brandPrimary" shadowRadius={20}>
+                    Start 7-Day Free Trial
+                </Button>
+                <Paragraph color="$gray9" fontSize={12} textAlign="center" paddingHorizontal="$4">
+                    By subscribing, you agree to our Terms of Service and Privacy Policy. Your trial will convert to a paid subscription automatically.
+                </Paragraph>
+            </YStack>
+
+            <XStack justifyContent="center" gap="$6">
+                <Text color="$gray10" fontSize={13} fontWeight="700" onPress={() => {}}>Restore</Text>
+                <Text color="$gray10" fontSize={13} fontWeight="700" onPress={() => {}}>Privacy</Text>
+                <Text color="$gray10" fontSize={13} fontWeight="700" onPress={() => {}}>Terms</Text>
+            </XStack>
+          </YStack>
+        </YStack>
+      </ScrollView>
+    </PageContainer>
   );
 }
