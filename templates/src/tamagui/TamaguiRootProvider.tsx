@@ -3,7 +3,7 @@ import { useColorScheme } from 'react-native';
 import { TamaguiProvider, Theme, isWeb } from 'tamagui';
 import tamaguiConfig from './tamagui.config';
 
-export type ThemeName = 'light' | 'dark';
+export type ThemeName = 'light' | 'dark' | 'ocean' | 'forest' | 'midnight' | 'sunrise';
 
 type ThemeSource = 'system' | 'manual';
 

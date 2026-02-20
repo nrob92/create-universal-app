@@ -33,7 +33,7 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
     'src/features/auth/client/useProfile.ts',
     'src/features/auth/ui/AuthForm.tsx',
     'src/features/payments/usePayments.ts',
-    'src/features/theme/ThemeToggle.tsx',
+    'src/features/theme/ThemeDropdown.tsx',
     'src/tamagui/tamagui.config.ts',
     'src/tamagui/TamaguiRootProvider.tsx',
     'src/tamagui/animations.ts',

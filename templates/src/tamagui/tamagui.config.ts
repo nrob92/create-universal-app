@@ -57,6 +57,54 @@ const tamaguiConfig = createTamagui({
       color: sushiColors.nori,
       primary: sushiColors.salmon,
       borderColor: '#e0e0e0',
+    },
+    ocean: {
+      ...config.themes.dark,
+      brandPrimary: '#0ea5e9', // Light Blue (Primary)
+      brandSecondary: '#f97316', // Orange (Complementary to blue)
+      brandAccent: '#3b82f6', // Rich Blue
+      brandTuna: '#ef4444',
+      background: '#0f172a', // Deep slate
+      backgroundStrong: '#1e293b',
+      color: '#f8fafc',
+      primary: '#0ea5e9',
+      borderColor: '#334155',
+    },
+    forest: {
+      ...config.themes.dark,
+      brandPrimary: '#10b981', // Emerald (Primary)
+      brandSecondary: '#f43f5e', // Rose/Red (Complementary to green)
+      brandAccent: '#059669', // Dark Emerald
+      brandTuna: '#ef4444',
+      background: '#064e3b', // Deep green
+      backgroundStrong: '#065f46',
+      color: '#ecfdf5',
+      primary: '#10b981',
+      borderColor: '#047857',
+    },
+    midnight: {
+      ...config.themes.dark,
+      brandPrimary: '#8b5cf6', // Violet (Primary)
+      brandSecondary: '#eab308', // Yellow/Gold (Complementary to violet)
+      brandAccent: '#7c3aed', // Deep Violet
+      brandTuna: '#ef4444',
+      background: '#2e1065', // Very deep purple
+      backgroundStrong: '#4c1d95',
+      color: '#f5f3ff',
+      primary: '#8b5cf6',
+      borderColor: '#5b21b6',
+    },
+    sunrise: {
+      ...config.themes.light,
+      brandPrimary: '#ea580c', // Dark Orange (Primary)
+      brandSecondary: '#0284c7', // Sky Blue (Complementary to orange)
+      brandAccent: '#c2410c', // Deep Orange
+      brandTuna: '#ef4444',
+      background: '#fff7ed', // Very light orange/white
+      backgroundStrong: '#ffedd5',
+      color: '#431407', // Very dark brown/black for contrast
+      primary: '#ea580c',
+      borderColor: '#fed7aa',
     }
   }
 });

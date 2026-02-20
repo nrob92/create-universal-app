@@ -2,10 +2,10 @@ import { ScrollView, YStack, H2, XStack, Text, View, Separator, Switch, isWeb, S
 import { ChevronRight, Bell, Shield, CircleUser, CreditCard, HelpCircle, Moon, Star, ArrowLeft, LogOut, Trash2 } from '@tamagui/lucide-icons';
 import { Alert } from 'react-native';
 import { SafePage } from '~/components/layout/PageContainer';
-import { useTheme } from '~/tamagui/TamaguiRootProvider';
 import { useRouter } from 'expo-router';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { useProfile } from '~/features/auth/client/useProfile';
+import { ThemeDropdown } from '~/features/theme/ThemeDropdown';
 import { Button } from '~/components/ui/Button';
 
 interface SettingItemProps {
@@ -17,6 +17,7 @@ interface SettingItemProps {
   onPress?: () => void;
   switchValue?: boolean;
   onSwitchChange?: (val: boolean) => void;
+  rightElement?: React.ReactNode;
 }
 
 function SettingItem({ 
@@ -27,7 +28,8 @@ function SettingItem({
   isLast, 
   onPress,
   switchValue,
-  onSwitchChange 
+  onSwitchChange,
+  rightElement
 }: SettingItemProps) {
   return (
     <YStack>
@@ -47,18 +49,24 @@ function SettingItem({
         </XStack>
         
         <XStack gap="$2" alignItems="center">
-          {value && <Text color="$gray10" fontSize={14} fontWeight="600">{value}</Text>}
-          {hasSwitch ? (
-            <Switch 
-              size="$3" 
-              checked={switchValue} 
-              onCheckedChange={onSwitchChange}
-              backgroundColor={switchValue ? '$brandPrimary' : '$backgroundStrong'}
-            >
-              <Switch.Thumb animation="quick" />
-            </Switch>
+          {rightElement ? (
+            rightElement
           ) : (
-            onPress && <ChevronRight size={18} color="$gray8" />
+            <>
+              {value && <Text color="$gray10" fontSize={14} fontWeight="600">{value}</Text>}
+              {hasSwitch ? (
+                <Switch 
+                  size="$3" 
+                  checked={switchValue} 
+                  onCheckedChange={onSwitchChange}
+                  backgroundColor={switchValue ? '$brandPrimary' : '$backgroundStrong'}
+                >
+                  <Switch.Thumb animation="quick" />
+                </Switch>
+              ) : (
+                onPress && <ChevronRight size={18} color="$gray8" />
+              )}
+            </>
           )}
         </XStack>
       </XStack>
@@ -68,7 +76,6 @@ function SettingItem({
 }
 
 export function SettingsScreen() {
-  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const signOut = useAuth((s) => s.signOut);
   const { deleteAccount, isDeleting } = useProfile();
@@ -144,13 +151,7 @@ export function SettingsScreen() {
               App Preferences
             </Text>
             <View backgroundColor="$backgroundStrong" px="$4" borderRadius="$9" borderWidth={1} borderColor="$borderColor">
-              <SettingItem 
-                icon={Moon} 
-                label="Dark Mode" 
-                hasSwitch 
-                switchValue={theme === 'dark'}
-                onSwitchChange={toggleTheme}
-              />
+              <ThemeDropdown />
               <SettingItem icon={Bell} label="Push Notifications" hasSwitch switchValue={true} />
               <SettingItem icon={HelpCircle} label="Help Center" isLast onPress={() => {}} />
             </View>
