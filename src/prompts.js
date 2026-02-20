@@ -47,11 +47,11 @@ export async function runPrompts() {
   let supabaseOption = await select({
     message: 'Supabase setup:',
     choices: [
-      { name: 'Link to existing project', value: 'existing', description: 'Use an existing Supabase project' },
       { name: 'Create new Supabase project', value: 'new', description: 'Create a new Supabase project via CLI' },
+      { name: 'Link to existing project', value: 'existing', description: 'Use an existing Supabase project' },
       { name: 'Skip Supabase setup', value: 'skip', description: 'Skip Supabase setup for now' },
     ],
-    default: 'existing',
+    default: 'new',
   });
 
   let supabaseProjectRef = '';
@@ -158,18 +158,13 @@ export async function runPrompts() {
   }
 
   const hasMobile = platforms.includes('ios') || platforms.includes('android');
-  let easOption = 'skip';
 
-  if (hasMobile) {
-    easOption = await select({
-      message: 'EAS/mobile build setup:',
-      choices: [
-        { name: 'Set up EAS builds now', value: 'setup', description: 'Run eas-cli login and configure builds' },
-        { name: 'Skip EAS setup', value: 'skip', description: 'Skip mobile build setup for now' },
-      ],
-      default: 'skip',
-    });
-  }
-
-  return { projectName, platforms, runInstall, supabaseOption, supabaseProjectRef, easOption, newProjectDetails };
+  return { 
+    projectName, 
+    platforms, 
+    runInstall, 
+    supabaseOption, 
+    supabaseProjectRef, 
+    newProjectDetails 
+  };
 }

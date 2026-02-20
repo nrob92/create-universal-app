@@ -30,6 +30,7 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
     'src/features/auth/client/supabaseClient.ts',
     'src/features/auth/auth.ts',
     'src/features/auth/client/useAuth.ts',
+    'src/features/auth/client/useProfile.ts',
     'src/features/auth/ui/AuthForm.tsx',
     'src/features/payments/usePayments.ts',
     'src/features/theme/ThemeToggle.tsx',
@@ -38,31 +39,34 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
     'src/tamagui/animations.ts',
     'src/tamagui/fonts.ts',
     // Platform-specific components
-    'src/interface/platform/PlatformSpecificRootProvider.tsx',
-    'src/interface/platform/PlatformSpecificRootProvider.native.tsx',
-    'src/interface/toast/Toast.tsx',
-    'src/interface/toast/Toast.native.tsx',
-    'src/interface/toast/emitter.ts',
-    'src/interface/keyboard/KeyboardStickyFooter.tsx',
-    'src/interface/keyboard/KeyboardStickyFooter.native.tsx',
-    'src/interface/layout/PageContainer.tsx',
-    'src/interface/layout/SettingRow.tsx',
-    'src/interface/layout/WebNav.tsx',
-    'src/interface/buttons/Button.tsx',
-    'src/interface/buttons/PrimaryButton.tsx',
-    'src/interface/cards/FeedCard.tsx',
-    'src/interface/cards/CategoryCard.tsx',
-    'src/interface/feedback/Spinner.tsx',
-    'src/interface/feedback/EmptyState.tsx',
-    'src/interface/feedback/ErrorBoundary.tsx',
-    'src/interface/feedback/LoadingState.tsx',
-    'src/interface/text/Headings.tsx',
-    'src/interface/backgrounds/GradientBackground.tsx',
-    'src/interface/forms/Input.tsx',
+    'src/components/platform/PlatformSpecificRootProvider.tsx',
+    'src/components/platform/PlatformSpecificRootProvider.native.tsx',
+    'src/components/toast/Toast.tsx',
+    'src/components/toast/Toast.native.tsx',
+    'src/components/toast/emitter.ts',
+    'src/components/keyboard/KeyboardStickyFooter.tsx',
+    'src/components/keyboard/KeyboardStickyFooter.native.tsx',
+    'src/components/layout/PageContainer.tsx',
+    'src/components/layout/SettingRow.tsx',
+    'src/components/layout/WebNav.tsx',
+    'src/components/layout/AppLayout.tsx',
+    'src/components/ui/Button.tsx',
+    'src/components/ui/PrimaryButton.tsx',
+    'src/components/blocks/FeedCard.tsx',
+    'src/components/blocks/CategoryCard.tsx',
+    'src/components/ui/Spinner.tsx',
+    'src/components/blocks/EmptyState.tsx',
+    'src/components/blocks/ErrorBoundary.tsx',
+    'src/components/blocks/LoadingState.tsx',
+    'src/components/ui/Headings.tsx',
+    'src/components/ui/GradientBackground.tsx',
+    'src/components/ui/Input.tsx',
     'src/features/auth/signInAsDemo.ts',
     'src/helpers/isDemoMode.ts',
     'src/helpers/haptics.ts',
     'src/screens/OnboardingScreen.tsx',
+    'src/screens/AuthCallbackScreen.tsx',
+    'src/screens/AuthScreen.tsx',
     'src/screens/ExploreScreen.tsx',
     'src/screens/FeedScreen.tsx',
     'src/screens/ProfileScreen.tsx',
@@ -125,7 +129,8 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
   await generateMetroConfig(projectDir);
   await generateAppConfig(projectDir, projectName, platforms);
   await generateTsConfig(projectDir);
-  await generateEnvFiles(projectDir, platforms);
+  // Pass true for these since we handle dynamic variables later in index.js now
+  await generateEnvFiles(projectDir, platforms, true, true);
 
   // Generate EAS config for mobile
   if (hasMobile) {
@@ -140,7 +145,7 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
   );
 }
 
-async function generateEnvFiles(projectDir, platforms) {
+async function generateEnvFiles(projectDir, platforms, setupGoogleAuth, setupPayments) {
   const hasMobile = platforms.includes('ios') || platforms.includes('android');
   const hasWeb = platforms.includes('web');
 
@@ -150,14 +155,20 @@ async function generateEnvFiles(projectDir, platforms) {
     'EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key',
   ];
 
-  if (hasWeb) {
+  if (setupGoogleAuth) {
+    if (hasWeb) envLines.push('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-google-web-client-id');
+    if (platforms.includes('ios')) envLines.push('EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=your-google-ios-client-id');
+    if (platforms.includes('android')) envLines.push('EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=your-google-android-client-id');
+  }
+
+  if (setupPayments && hasWeb) {
     envLines.push('EXPO_PUBLIC_STRIPE_PUBLIC_KEY=pk_test_...');
     envLines.push('STRIPE_SECRET_KEY=sk_test_...');
   }
 
-  if (hasMobile) {
-    envLines.push('EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_...');
-    envLines.push('EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_...');
+  if (setupPayments && hasMobile) {
+    if (platforms.includes('ios')) envLines.push('EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_...');
+    if (platforms.includes('android')) envLines.push('EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_...');
   }
 
   await fs.writeFile(
@@ -171,18 +182,24 @@ async function generateEnvFiles(projectDir, platforms) {
     `  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',`,
   ];
 
-  if (hasWeb) {
+  if (setupGoogleAuth) {
+    if (hasWeb) envEntries.push(`  GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',`);
+    if (platforms.includes('ios')) envEntries.push(`  GOOGLE_IOS_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? '',`);
+    if (platforms.includes('android')) envEntries.push(`  GOOGLE_ANDROID_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? '',`);
+  }
+
+  if (setupPayments && hasWeb) {
     envEntries.push(`  STRIPE_PUBLIC_KEY: process.env.EXPO_PUBLIC_STRIPE_PUBLIC_KEY ?? '',`);
     envEntries.push(`  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ?? '',`);
   }
 
-  if (hasMobile) {
-    envEntries.push(`  REVENUECAT_IOS_KEY: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '',`);
-    envEntries.push(`  REVENUECAT_ANDROID_KEY: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '',`);
+  if (setupPayments && hasMobile) {
+    if (platforms.includes('ios')) envEntries.push(`  REVENUECAT_IOS_KEY: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? '',`);
+    if (platforms.includes('android')) envEntries.push(`  REVENUECAT_ANDROID_KEY: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '',`);
   }
 
   const requiredKeys = [`'SUPABASE_URL'`, `'SUPABASE_ANON_KEY'`];
-  if (hasWeb) {
+  if (setupPayments && hasWeb) {
     requiredKeys.push(`'STRIPE_PUBLIC_KEY'`);
   }
 

@@ -1,8 +1,12 @@
-import { ScrollView, YStack, H2, XStack, Text, View, Separator, Switch, isWeb } from 'tamagui';
-import { ChevronRight, Bell, Shield, CircleUser, CreditCard, HelpCircle, Moon, Star, ArrowLeft } from '@tamagui/lucide-icons';
+import { ScrollView, YStack, H2, XStack, Text, View, Separator, Switch, isWeb, Spinner } from 'tamagui';
+import { ChevronRight, Bell, Shield, CircleUser, CreditCard, HelpCircle, Moon, Star, ArrowLeft, LogOut, Trash2 } from '@tamagui/lucide-icons';
+import { Alert } from 'react-native';
 import { SafePage } from '~/components/layout/PageContainer';
 import { useTheme } from '~/tamagui/TamaguiRootProvider';
 import { useRouter } from 'expo-router';
+import { useAuth } from '~/features/auth/client/useAuth';
+import { useProfile } from '~/features/auth/client/useProfile';
+import { Button } from '~/components/ui/Button';
 
 interface SettingItemProps {
   icon: any;
@@ -66,6 +70,8 @@ function SettingItem({
 export function SettingsScreen() {
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const signOut = useAuth((s) => s.signOut);
+  const { deleteAccount, isDeleting } = useProfile();
 
   return (
     <SafePage>
@@ -148,6 +154,65 @@ export function SettingsScreen() {
               <SettingItem icon={Bell} label="Push Notifications" hasSwitch switchValue={true} />
               <SettingItem icon={HelpCircle} label="Help Center" isLast onPress={() => {}} />
             </View>
+          </YStack>
+
+          {/* Account Actions */}
+          <YStack gap="$3" marginTop="$4">
+            <Button 
+              variant="outlined" 
+              onPress={signOut} 
+              width="100%" 
+              sized="large"
+              borderColor="$brandAccent"
+              backgroundColor="rgba(244, 162, 97, 0.03)"
+              hoverStyle={{ borderColor: '$brandAccent', backgroundColor: 'rgba(244, 162, 97, 0.08)' }}
+              pressStyle={{ scale: 0.98, opacity: 0.8 }}
+            >
+              <XStack gap="$3" alignItems="center">
+                <LogOut size={20} color="$brandAccent" />
+                <Text color="$brandAccent" fontWeight="800" fontSize={16} textTransform="uppercase" letterSpacing={1}>
+                  Leave the Sushi Club
+                </Text>
+              </XStack>
+            </Button>
+
+            <Button 
+              variant="outlined" 
+              onPress={() => {
+                if (isWeb) {
+                  if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                    deleteAccount();
+                  }
+                } else {
+                  Alert.alert(
+                    'Delete Account',
+                    'Are you sure you want to delete your account? This action cannot be undone.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Delete', style: 'destructive', onPress: () => deleteAccount() }
+                    ]
+                  );
+                }
+              }}
+              disabled={isDeleting}
+              width="100%" 
+              sized="large"
+              borderColor="$red9"
+              backgroundColor="rgba(255, 0, 0, 0.03)"
+              hoverStyle={{ borderColor: '$red10', backgroundColor: 'rgba(255, 0, 0, 0.08)' }}
+              pressStyle={{ scale: 0.98, opacity: 0.8 }}
+            >
+              <XStack gap="$3" alignItems="center">
+                {isDeleting ? (
+                  <Spinner color="$red9" />
+                ) : (
+                  <Trash2 size={20} color="$red9" />
+                )}
+                <Text color="$red9" fontWeight="800" fontSize={16} textTransform="uppercase" letterSpacing={1}>
+                  {isDeleting ? 'Deleting...' : 'Delete Account'}
+                </Text>
+              </XStack>
+            </Button>
           </YStack>
 
           <YStack alignItems="center" marginTop="$4" gap="$1">

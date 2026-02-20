@@ -96,3 +96,15 @@ create index idx_subscriptions_provider_id on public.subscriptions(provider_subs
 create trigger on_subscription_updated
   before update on public.subscriptions
   for each row execute function public.handle_updated_at();
+
+-- ============================================================================
+-- 4. Delete User Function (Invoked from Client via RPC)
+-- ============================================================================
+create or replace function public.delete_user()
+returns void as $$
+begin
+  -- Deleting from auth.users will automatically cascade and delete the profile
+  -- and subscriptions if they have "on delete cascade" configured.
+  delete from auth.users where id = auth.uid();
+end;
+$$ language plpgsql security definer;

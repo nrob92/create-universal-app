@@ -1,6 +1,46 @@
 import { spawn, exec } from 'child_process';
 import path from 'path';
 import chalk from 'chalk';
+import fs from 'fs';
+import os from 'os';
+
+// Helper to get Supabase Access Token from local CLI config
+export function getSupabaseToken() {
+  try {
+    const isWindows = process.platform === 'win32';
+    
+    // Check common paths for Supabase CLI token
+    // The CLI usually stores it in ~/.supabase/access-token
+    const paths = [
+      path.join(os.homedir(), '.supabase', 'access-token'),
+      path.join(os.homedir(), 'AppData', 'Roaming', 'supabase', 'access-token'),
+      path.join(os.homedir(), 'AppData', 'Local', 'supabase', 'access-token'),
+      // Also check Deno's cache directory since the CLI is built on Deno
+      path.join(os.homedir(), '.supabase', 'cli', 'access-token'),
+    ];
+    
+    for (const p of paths) {
+      if (fs.existsSync(p)) {
+        let token = fs.readFileSync(p, 'utf-8').trim();
+        // Sometimes the token is stored as a JSON object depending on CLI version
+        if (token.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(token);
+            token = parsed.token || parsed.access_token;
+          } catch (e) {
+            // Not JSON
+          }
+        }
+        if (token && token.startsWith('sbp_')) {
+          return token;
+        }
+      }
+    }
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
 
 // Cross-platform way to open a URL in browser
 function openBrowser(url) {
@@ -449,6 +489,39 @@ export async function setupSupabase(projectDir, supabaseOption, projectRef, proj
   }
   
   return { success: false, message: 'Project ref is required' };
+}
+
+/**
+ * Updates a project's auth config directly via Management API
+ * @param {string} projectRef - Project reference ID
+ * @param {object} config - Config object to update
+ * @param {string} token - The Supabase access token to use
+ * @returns {Promise<{success: boolean, message?: string}>}
+ */
+export async function updateAuthConfig(projectRef, config, token) {
+  try {
+    // We can use native fetch since we require Node 18+
+    const res = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/config/auth`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      return { 
+        success: false, 
+        message: `API returned ${res.status}: ${JSON.stringify(errorData)}` 
+      };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, message: err.message };
+  }
 }
 
 /**

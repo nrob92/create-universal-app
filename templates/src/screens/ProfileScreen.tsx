@@ -1,6 +1,7 @@
-import { ScrollView, YStack, H2, H3, Paragraph, Avatar, XStack, Text, Card, Separator, View, isWeb } from 'tamagui';
-import { Star, Settings as SettingsIcon, LogOut, Edit3, ChevronRight, ShoppingBag, Award, Heart } from '@tamagui/lucide-icons';
+import { ScrollView, YStack, H2, H3, Paragraph, Avatar, XStack, Text, Separator, View } from 'tamagui';
+import { Star, Settings as SettingsIcon, Edit3, ChevronRight, ShoppingBag, Award, Heart } from '@tamagui/lucide-icons';
 import { useAuth } from '~/features/auth/client/useAuth';
+import { useProfile } from '~/features/auth/client/useProfile';
 import { useBilling } from '~/features/payments/useBilling';
 import { useRouter } from 'expo-router';
 import { Button } from '~/components/ui/Button';
@@ -23,11 +24,12 @@ function StatItem({ value, label }: { value: string; label: string }) {
 
 export function ProfileScreen() {
   const user = useAuth((s) => s.user);
-  const signOut = useAuth((s) => s.signOut);
+  const { profile } = useProfile();
   const { isPro } = useBilling();
   const router = useRouter();
 
-  const displayName = user?.email?.split('@')[0] ?? 'Sushi Lover';
+  const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Sushi Lover';
+  const avatarUrl = profile?.avatar_url;
 
   return (
     <SafePage>
@@ -59,7 +61,8 @@ export function ProfileScreen() {
           <YStack alignItems="center" marginTop={-70} gap="$4" paddingHorizontal="$5">
             <YStack position="relative">
               <Avatar circular size="$14" borderWidth={6} borderColor="$background" shadowColor="$black1" shadowRadius={20} shadowOpacity={0.3}>
-                <Avatar.Fallback backgroundColor="$brandPrimary">
+                {avatarUrl && <Avatar.Image src={avatarUrl} />}
+                <Avatar.Fallback backgroundColor="$brandPrimary" alignItems="center" justifyContent="center">
                   <Text color="white" fontSize={48} fontWeight="900">
                     {displayName[0]?.toUpperCase()}
                   </Text>
@@ -174,28 +177,6 @@ export function ProfileScreen() {
                   </YStack>
                 ))}
               </YStack>
-            </YStack>
-
-            {/* Logout Button */}
-            <YStack width="100%" maxWidth={420} marginTop="$8" gap="$3" alignItems="center">
-              <Button 
-                variant="outlined" 
-                onPress={signOut} 
-                width="100%" 
-                sized="large"
-                borderColor="$brandAccent"
-                backgroundColor="rgba(244, 162, 97, 0.03)"
-                hoverStyle={{ borderColor: '$brandAccent', backgroundColor: 'rgba(244, 162, 97, 0.08)' }}
-                pressStyle={{ scale: 0.98, opacity: 0.8 }}
-              >
-                <XStack gap="$3" alignItems="center">
-                  <LogOut size={20} color="$brandAccent" />
-                  <Text color="$brandAccent" fontWeight="800" fontSize={16} textTransform="uppercase" letterSpacing={1}>
-                    Leave the Sushi Club
-                  </Text>
-                </XStack>
-              </Button>
-              <Text color="$gray8" fontSize={12} fontWeight="600">We'll keep your table ready for you 🍣</Text>
             </YStack>
           </YStack>
         </YStack>
