@@ -1,3 +1,4 @@
+import '@tamagui/native/setup-expo-linear-gradient';
 import '@tamagui/native/setup-zeego';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { useEffect, type ReactNode } from 'react';
@@ -10,6 +11,7 @@ import { Spinner } from '~/components/ui/Spinner';
 import { validateEnv } from '~/constants/env';
 import { PlatformSpecificRootProvider } from '~/components/platform/PlatformSpecificRootProvider';
 import { ToastProvider } from '~/components/toast/Toast';
+import { useBillingStore } from '~/features/payments/useBilling';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -56,11 +58,13 @@ function AuthGuard({ children }: { children: ReactNode }) {
 }
 
 export default function RootLayout() {
-  const initialize = useAuth((s) => s.initialize);
+  const initializeAuth = useAuth((s) => s.initialize);
+  const initializeBilling = useBillingStore((s) => s.initialize);
 
   useEffect(() => {
-    initialize();
-  }, [initialize]);
+    initializeAuth();
+    initializeBilling();
+  }, [initializeAuth, initializeBilling]);
 
   return (
     <QueryClientProvider client={queryClient}>

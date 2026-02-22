@@ -2,11 +2,15 @@ import { ScrollView, YStack, H2, XStack, Text, View, Separator, Switch, isWeb, S
 import { ChevronRight, Bell, Shield, CircleUser, CreditCard, HelpCircle, Moon, Star, ArrowLeft, LogOut, Trash2 } from '@tamagui/lucide-icons';
 import { Alert } from 'react-native';
 import { SafePage } from '~/components/layout/PageContainer';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { useProfile } from '~/features/auth/client/useProfile';
 import { ThemeDropdown } from '~/features/theme/ThemeDropdown';
 import { Button } from '~/components/ui/Button';
+import { useEffect } from 'react';
+import { showToast } from '~/components/toast/emitter';
+import { useSubscriptionStatus } from '~/features/payments/useBilling';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SettingItemProps {
   icon: any;
@@ -77,8 +81,33 @@ function SettingItem({
 
 export function SettingsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const signOut = useAuth((s) => s.signOut);
+  const user = useAuth((s) => s.user);
   const { deleteAccount, isDeleting } = useProfile();
+  const queryClient = useQueryClient();
+  
+  // Replace the old Zustand store call with the new React Query hook
+  const { data: isPro, isLoading: isProLoading } = useSubscriptionStatus(user?.id);
+
+  useEffect(() => {
+    if (params.success === 'true') {
+      showToast('Welcome to the Club! 🍣', { 
+        type: 'success',
+        duration: 5000 
+      });
+      // Force an immediate refetch when returning from Stripe
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['subscription', user.id] });
+      }
+      // Clear the params so toast doesn't show again on refresh
+      router.setParams({ success: undefined });
+    }
+    if (params.canceled === 'true') {
+      showToast('Payment cancelled', { type: 'info' });
+      router.setParams({ canceled: undefined });
+    }
+  }, [params.success, params.canceled, user?.id, queryClient, router]);
 
   return (
     <SafePage>
@@ -118,19 +147,31 @@ export function SettingsScreen() {
                     <Text color="white" fontWeight="800" fontSize={12} textTransform="uppercase" letterSpacing={1}>
                         Membership Status
                     </Text>
-                    <Text color="white" fontWeight="900" fontSize={24}>Sushi Club Pro</Text>
+                    <Text color="white" fontWeight="900" fontSize={24}>
+                      {isProLoading 
+                        ? 'Loading...' 
+                        : isPro?.tier === 'premium' 
+                          ? 'Premium Member' 
+                          : isPro?.tier === 'pro' 
+                            ? 'Pro Member' 
+                            : isPro?.tier === 'basic' 
+                              ? 'Basic Member' 
+                              : 'Free Tier'}
+                    </Text>
                 </YStack>
                 <View backgroundColor="white" p="$2" borderRadius="$5">
                     <Star size={20} color="$brandPrimary" fill="$brandPrimary" />
                 </View>
              </XStack>
 
-             <YStack gap="$1" marginTop="$2">
-                <Text color="rgba(255,255,255,0.8)" fontSize={12} fontWeight="700">Valid until December 2026</Text>
-                <View height={6} width="100%" backgroundColor="rgba(255,255,255,0.2)" borderRadius={3} marginTop="$1">
-                    <View height="100%" width="65%" backgroundColor="white" borderRadius={3} />
-                </View>
-             </YStack>
+             {isPro && (
+               <YStack gap="$1" marginTop="$2">
+                  <Text color="rgba(255,255,255,0.8)" fontSize={12} fontWeight="700">Valid until December 2026</Text>
+                  <View height={6} width="100%" backgroundColor="rgba(255,255,255,0.2)" borderRadius={3} marginTop="$1">
+                      <View height="100%" width="65%" backgroundColor="white" borderRadius={3} />
+                  </View>
+               </YStack>
+             )}
           </YStack>
 
           {/* Account Section */}

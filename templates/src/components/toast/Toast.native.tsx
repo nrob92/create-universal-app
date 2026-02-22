@@ -1,15 +1,33 @@
-import { Toast, useToastState } from '@tamagui/toast';
+import { Toast, useToastState, useToastController } from '@tamagui/toast';
 import { YStack, Text, View, XStack } from 'tamagui';
 import { CheckCircle, AlertCircle, Info } from '@tamagui/lucide-icons';
+import { useEffect } from 'react';
+import { addToastListener } from './emitter';
 
 export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {children}
+      <ToastListenerComponent />
       <CurrentToast />
     </>
   );
 };
+
+function ToastListenerComponent() {
+  const toast = useToastController();
+
+  useEffect(() => {
+    return addToastListener((options) => {
+      toast.show(options.message, {
+        type: options.type,
+        duration: options.duration,
+      });
+    });
+  }, [toast]);
+
+  return null;
+}
 
 function CurrentToast() {
   const currentToast = useToastState();

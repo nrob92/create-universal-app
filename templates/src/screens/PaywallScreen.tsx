@@ -4,6 +4,9 @@ import { Button } from '~/components/ui/Button';
 import { PageContainer } from '~/components/layout/PageContainer';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePackages, usePurchase, PackageInfo } from '~/features/payments/useBilling';
+import { useAuth } from '~/features/auth/client/useAuth';
+import { useState } from 'react';
 
 const FEATURES = [
   { title: 'Unlimited Sushi Orders', icon: Zap, description: 'No limits on how many rolls you can explore.' },
@@ -14,6 +17,32 @@ const FEATURES = [
 export function PaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  
+  // React Query hooks
+  const { data: packages = [], isLoading: isLoadingPackages } = usePackages();
+  const { mutateAsync: purchasePackage, isPending: isPurchasing } = usePurchase();
+  const [selectedPackage, setSelectedPackage] = useState<PackageInfo | null>(null);
+  
+  const user = useAuth((s) => s.user);
+
+  // Set default selected package when they load
+  if (!selectedPackage && packages.length > 0) {
+    const defaultPkg = packages.find(p => p.id === 'pro') || packages[0];
+    setSelectedPackage(defaultPkg);
+  }
+
+  const handlePurchase = async () => {
+    if (!selectedPackage) return;
+    
+    if (!user) {
+        // Redirect to login if not authenticated
+        router.push('/login');
+        return;
+    }
+    await purchasePackage({ pkg: selectedPackage, userId: user.id });
+  };
+
+  const isLoading = isLoadingPackages || isPurchasing;
 
   return (
     <PageContainer backgroundColor="$background">
@@ -125,65 +154,73 @@ export function PaywallScreen() {
                     Select a Plan
                 </Text>
                 
-                <YStack 
-                    backgroundColor="$backgroundStrong" 
-                    p="$5" 
-                    borderRadius="$9" 
-                    borderWidth={2} 
-                    borderColor="$brandPrimary"
-                    position="relative"
-                >
-                    <View 
-                        position="absolute" 
-                        top={-12} 
-                        right={20} 
-                        backgroundColor="$brandPrimary" 
-                        px="$3" 
-                        py="$1" 
-                        borderRadius="$10"
-                    >
-                        <Text color="white" fontWeight="800" fontSize={10} textTransform="uppercase">Most Popular</Text>
-                    </View>
+                {packages.map((pkg) => {
+                    const isSelected = selectedPackage?.id === pkg.id;
+                    const isPopular = pkg.id === 'pro'; // Hardcoded popular check for now
 
-                    <XStack justifyContent="space-between" alignItems="center">
-                        <YStack>
-                            <Text fontWeight="800" fontSize={20}>Annual Master</Text>
-                            <Text color="$gray10" fontSize={14}>Save 40% yearly</Text>
-                        </YStack>
-                        <YStack alignItems="flex-end">
-                            <Text fontSize={24} fontWeight="900">$5.99</Text>
-                            <Text color="$gray9" fontSize={12}>/month</Text>
-                        </YStack>
-                    </XStack>
-                </YStack>
+                    return (
+                        <YStack 
+                            key={pkg.id}
+                            backgroundColor={isSelected ? "$brandPrimary" : "$backgroundStrong"} 
+                            p="$5" 
+                            borderRadius="$9" 
+                            borderWidth={2} 
+                            borderColor={isSelected ? "$brandPrimary" : "$borderColor"}
+                            position="relative"
+                            onPress={() => setSelectedPackage(pkg)}
+                            opacity={isLoading ? 0.5 : 1}
+                            pressStyle={{ scale: 0.98 }}
+                            animation="quick"
+                        >
+                            {isPopular && (
+                                <View 
+                                    position="absolute" 
+                                    top={-12} 
+                                    right={20} 
+                                    backgroundColor={isSelected ? "white" : "$brandPrimary"} 
+                                    px="$3" 
+                                    py="$1" 
+                                    borderRadius="$10"
+                                >
+                                    <Text color={isSelected ? "$brandPrimary" : "white"} fontWeight="800" fontSize={10} textTransform="uppercase">Most Popular</Text>
+                                </View>
+                            )}
 
-                <YStack 
-                    backgroundColor="$backgroundStrong" 
-                    p="$5" 
-                    borderRadius="$9" 
-                    borderWidth={1} 
-                    borderColor="$borderColor"
-                >
-                    <XStack justifyContent="space-between" alignItems="center">
-                        <YStack>
-                            <Text fontWeight="800" fontSize={20}>Monthly Novice</Text>
-                            <Text color="$gray10" fontSize={14}>Flexible, cancel anytime</Text>
+                            <XStack justifyContent="space-between" alignItems="center">
+                                <YStack>
+                                    <Text fontWeight="800" fontSize={20} color={isSelected ? "white" : "$color"}>{pkg.title}</Text>
+                                    <Text color={isSelected ? "rgba(255,255,255,0.8)" : "$gray10"} fontSize={14}>{pkg.description}</Text>
+                                </YStack>
+                                <YStack alignItems="flex-end">
+                                    <Text fontSize={24} fontWeight="900" color={isSelected ? "white" : "$color"}>{pkg.priceString.split('/')[0]}</Text>
+                                    <Text color={isSelected ? "rgba(255,255,255,0.8)" : "$gray9"} fontSize={12}>/{pkg.priceString.split('/')[1] || 'month'}</Text>
+                                </YStack>
+                            </XStack>
                         </YStack>
-                        <YStack alignItems="flex-end">
-                            <Text fontSize={24} fontWeight="900">$9.99</Text>
-                            <Text color="$gray9" fontSize={12}>/month</Text>
-                        </YStack>
-                    </XStack>
-                </YStack>
+                    );
+                })}
+
+                {packages.length === 0 && !isLoading && (
+                    <Text textAlign="center" color="$gray10">No plans available.</Text>
+                )}
             </YStack>
 
             {/* Action Buttons */}
             <YStack gap="$4">
-                <Button variant="primary" sized="large" shadowColor="$brandPrimary" shadowRadius={20}>
-                    Start 7-Day Free Trial
+                <Button 
+                    variant="primary" 
+                    sized="large" 
+                    shadowColor="$brandPrimary" 
+                    shadowRadius={20}
+                    loading={isLoading}
+                    disabled={!selectedPackage}
+                    onPress={handlePurchase}
+                    opacity={!selectedPackage ? 0.5 : 1}
+                >
+                    {selectedPackage ? `Start with ${selectedPackage.title}` : 'Select a Plan'}
                 </Button>
                 <Paragraph color="$gray9" fontSize={12} textAlign="center" paddingHorizontal="$4">
-                    By subscribing, you agree to our Terms of Service and Privacy Policy. Your trial will convert to a paid subscription automatically.
+                    By subscribing, you agree to our Terms of Service and Privacy Policy.
                 </Paragraph>
             </YStack>
 
@@ -198,3 +235,4 @@ export function PaywallScreen() {
     </PageContainer>
   );
 }
+

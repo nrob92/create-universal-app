@@ -81,7 +81,9 @@ create table public.subscriptions (
   current_period_end          timestamptz,
   cancel_at                   timestamptz,
   created_at                  timestamptz default now(),
-  updated_at                  timestamptz default now()
+  updated_at                  timestamptz default now(),
+  unique (user_id),
+  tier                        text check (tier in ('basic', 'pro', 'premium'))
 );
 
 alter table public.subscriptions enable row level security;

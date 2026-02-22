@@ -5,7 +5,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:newreleases.io)",
       "Bash(node -e:*)",
-      "WebFetch(domain:tamagui.dev)"
+      "WebFetch(domain:tamagui.dev)",
+      "Bash(ls -la \"C:\\\\Users\\\\Nrobi\\\\create-universal-app\\\\templates\\\\scripts\"\" 2>/dev/null || echo \"Directory not found \")"
     ]
   }
 }

@@ -313,107 +313,13 @@ async function main() {
   }
 
   // ── Step 5d: Payments Prompts ─────────────────────────────
-  setupPayments = await confirm({
-    message: "\nSet up Payments now? (Stripe for Web / RevenueCat for Mobile)",
-    default: true,
-  });
+  console.log(chalk.bold.cyan("\n  ═══ Payments Setup ═══\n"));
+  console.log(chalk.white("  We have included automated setup scripts for payments:"));
+  console.log(chalk.white(`  - ${chalk.cyan("npm run setup:stripe")}      Configures Stripe products, prices, and keys`));
+  console.log(chalk.white(`  - ${chalk.cyan("npm run setup:revenuecat")}  Configures RevenueCat API keys for mobile\n`));
 
-  if (setupPayments) {
-    console.log(chalk.bold.cyan("\n  ═══ Payments Setup ═══\n"));
+  setupPayments = true; // Mark as true so README instructions show correctly if needed
 
-    const isWindows = process.platform === "win32";
-    const envPath = path.join(projectDir, ".env");
-
-    if (hasWeb) {
-      console.log(chalk.white("  1. Go to dashboard.stripe.com/apikeys"));
-      console.log(chalk.dim("  Opening browser to Stripe..."));
-      if (isWindows) exec("start https://dashboard.stripe.com/apikeys");
-      else if (process.platform === "darwin")
-        exec("open https://dashboard.stripe.com/apikeys");
-      else exec("xdg-open https://dashboard.stripe.com/apikeys");
-
-      const stripePubKey = await input({
-        message:
-          'Paste your Stripe Publishable Key (pk_test_...) (or type "skip"):',
-        validate: (v) =>
-          v.trim() ? true : 'Required to continue (or type "skip").',
-      });
-
-      if (stripePubKey.toLowerCase() !== "skip") {
-        const stripeSecKey = await input({
-          message: "Paste your Stripe Secret Key (sk_test_...):",
-          validate: (v) => (v.trim() ? true : "Required to continue."),
-        });
-
-        // Write directly to .env
-        if (await fs.pathExists(envPath)) {
-          let envContent = await fs.readFile(envPath, "utf-8");
-          envContent = envContent.replace(
-            "EXPO_PUBLIC_STRIPE_PUBLIC_KEY=pk_test_...",
-            `EXPO_PUBLIC_STRIPE_PUBLIC_KEY=${stripePubKey}`,
-          );
-          envContent = envContent.replace(
-            "STRIPE_SECRET_KEY=sk_test_...",
-            `STRIPE_SECRET_KEY=${stripeSecKey}`,
-          );
-          await fs.writeFile(envPath, envContent);
-        }
-        console.log(chalk.green("  ✅ Added Stripe Keys to your local .env\n"));
-      }
-    }
-
-    if (hasMobile) {
-      console.log(
-        chalk.white("  1. Go to app.revenuecat.com -> Project -> API Keys"),
-      );
-      console.log(chalk.dim("  Opening browser to RevenueCat..."));
-      if (isWindows) exec("start https://app.revenuecat.com/");
-      else if (process.platform === "darwin")
-        exec("open https://app.revenuecat.com/");
-      else exec("xdg-open https://app.revenuecat.com/");
-
-      if (answers.platforms.includes("ios")) {
-        const rcIosKey = await input({
-          message:
-            'Paste your RevenueCat iOS API Key (appl_...) (or type "skip"):',
-          validate: (v) =>
-            v.trim() ? true : 'Required to continue (or type "skip").',
-        });
-        if (rcIosKey.toLowerCase() !== "skip") {
-          if (await fs.pathExists(envPath)) {
-            let envContent = await fs.readFile(envPath, "utf-8");
-            envContent = envContent.replace(
-              "EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_...",
-              `EXPO_PUBLIC_REVENUECAT_IOS_KEY=${rcIosKey}`,
-            );
-            await fs.writeFile(envPath, envContent);
-          }
-        }
-      }
-
-      if (answers.platforms.includes("android")) {
-        const rcAndroidKey = await input({
-          message:
-            'Paste your RevenueCat Android API Key (goog_...) (or type "skip"):',
-          validate: (v) =>
-            v.trim() ? true : 'Required to continue (or type "skip").',
-        });
-        if (rcAndroidKey.toLowerCase() !== "skip") {
-          if (await fs.pathExists(envPath)) {
-            let envContent = await fs.readFile(envPath, "utf-8");
-            envContent = envContent.replace(
-              "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_...",
-              `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=${rcAndroidKey}`,
-            );
-            await fs.writeFile(envPath, envContent);
-          }
-        }
-      }
-      console.log(
-        chalk.green("  ✅ Added RevenueCat Keys to your local .env\n"),
-      );
-    }
-  }
 
   // ── Step 6: EAS setup (if applicable) ──────────────────────────────────
   if (hasMobile) {
@@ -528,6 +434,18 @@ async function main() {
     console.log(
       chalk.white("    EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ") +
         chalk.dim("same page"),
+    );
+    console.log(
+      chalk.dim("\n    RevenueCat Manual Steps:"),
+    );
+    console.log(
+      chalk.dim("      1. Create a Project in RevenueCat"),
+    );
+    console.log(
+      chalk.dim("      2. Create an Entitlement named EXACTLY 'premium'"),
+    );
+    console.log(
+      chalk.dim("      3. Link your products to the entitlement"),
     );
   }
   console.log("");

@@ -32,7 +32,7 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
     'src/features/auth/client/useAuth.ts',
     'src/features/auth/client/useProfile.ts',
     'src/features/auth/ui/AuthForm.tsx',
-    'src/features/payments/useBilling.ts',
+    'src/features/payments/usePayments.ts',
     'src/features/theme/ThemeDropdown.tsx',
     'src/tamagui/tamagui.config.ts',
     'src/tamagui/TamaguiRootProvider.tsx',
@@ -59,9 +59,8 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
     'src/components/blocks/ErrorBoundary.tsx',
     'src/components/blocks/LoadingState.tsx',
     'src/components/ui/Headings.tsx',
+    'src/components/ui/GradientBackground.tsx',
     'src/components/ui/Input.tsx',
-    'src/components/ui/Skeleton.tsx',
-    'src/components/blocks/FeedCardSkeleton.tsx',
     'src/features/auth/signInAsDemo.ts',
     'src/helpers/isDemoMode.ts',
     'src/helpers/haptics.ts',
@@ -79,9 +78,6 @@ export async function generateProject({ projectName, platforms, supabaseProjectR
     'supabase/migrations/00001_init.sql',
     'scripts/setup-stripe.mjs',
     'scripts/setup-revenuecat.mjs',
-    'supabase/functions/create-checkout-session/index.ts',
-    'supabase/functions/stripe-webhook/index.ts',
-    'supabase/functions/import_map.json',
   ];
 
   for (const file of alwaysCopy) {
@@ -314,8 +310,8 @@ async function generatePackageJson(projectDir, projectName, platforms) {
     'dev': 'expo start',
     'build:web': 'expo export --platform web',
     'start': 'expo start',
-    'setup:stripe': 'node scripts/setup-stripe.mjs',
-    'setup:revenuecat': 'node scripts/setup-revenuecat.mjs',
+    'setup:stripe': 'node scripts/setup-stripe.js',
+    'setup:revenuecat': 'node scripts/setup-revenuecat.js',
     'stripe:listen': 'stripe listen --forward-to localhost:54321/functions/v1/stripe-webhook'
   };
 

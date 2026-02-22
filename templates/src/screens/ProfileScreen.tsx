@@ -2,7 +2,7 @@ import { ScrollView, YStack, H2, H3, Paragraph, Avatar, XStack, Text, Separator,
 import { Star, Settings as SettingsIcon, Edit3, ChevronRight, ShoppingBag, Award, Heart } from '@tamagui/lucide-icons';
 import { useAuth } from '~/features/auth/client/useAuth';
 import { useProfile } from '~/features/auth/client/useProfile';
-import { useBilling } from '~/features/payments/useBilling';
+import { useSubscriptionStatus } from '~/features/payments/useBilling';
 import { useRouter } from 'expo-router';
 import { Button } from '~/components/ui/Button';
 import { SafePage } from '~/components/layout/PageContainer';
@@ -25,7 +25,7 @@ function StatItem({ value, label }: { value: string; label: string }) {
 export function ProfileScreen() {
   const user = useAuth((s) => s.user);
   const { profile } = useProfile();
-  const { isPro } = useBilling();
+  const { data: isPro, isLoading: isProLoading } = useSubscriptionStatus(user?.id);
   const router = useRouter();
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Sushi Lover';
@@ -89,7 +89,7 @@ export function ProfileScreen() {
               <XStack alignItems="center" gap="$2" backgroundColor="$backgroundStrong" px="$4" py="$1.5" borderRadius="$10" borderWidth={1} borderColor="$borderColor">
                 <Star size={14} color={isPro ? "$brandAccent" : "$gray8"} fill={isPro ? "$brandAccent" : "transparent"} />
                 <Text color="$gray11" fontWeight="800" fontSize={12} textTransform="uppercase" letterSpacing={1}>
-                  {isPro ? 'Pro Master' : 'Sushi Novice'}
+                  {isProLoading ? "Loading..." : isPro?.tier ? `${isPro.tier} Master` : 'Sushi Novice'}
                 </Text>
               </XStack>
             </YStack>
@@ -129,7 +129,7 @@ export function ProfileScreen() {
               >
                 <XStack justifyContent="space-between" alignItems="center">
                     <YStack gap="$1" flex={1}>
-                        <H3 color="white" fontSize={22} fontWeight="900">Get Pro Master</H3>
+                        <H3 color="white" fontSize={22} fontWeight="900">Upgrade to Pro</H3>
                         <Paragraph color="rgba(255,255,255,0.9)" fontSize={14} fontWeight="600" lineHeight={20}>
                             Unlock free delivery and double points on every Salmon Roll.
                         </Paragraph>
@@ -143,7 +143,7 @@ export function ProfileScreen() {
                   hoverStyle={{ backgroundColor: '$background', opacity: 0.9 }}
                   pressStyle={{ backgroundColor: '$background', scale: 0.98 }}
                 >
-                  <Text color="$brandPrimary" fontWeight="900">Upgrade for $9.99</Text>
+                  <Text color="$brandPrimary" fontWeight="900">View Plans</Text>
                 </Button>
               </YStack>
             )}
