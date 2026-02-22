@@ -1,4 +1,4 @@
-import { ScrollView, YStack, H2, H3, Paragraph, XStack, Text, View, isWeb } from 'tamagui';
+import { ScrollView, YStack, H2, H3, Paragraph, XStack, Text, View, isWeb, useTheme } from 'tamagui';
 import { Check, Star, Zap, Shield, ArrowLeft } from '@tamagui/lucide-icons';
 import { Button } from '~/components/ui/Button';
 import { PageContainer } from '~/components/layout/PageContainer';
@@ -24,6 +24,8 @@ export function PaywallScreen() {
   const [selectedPackage, setSelectedPackage] = useState<PackageInfo | null>(null);
   
   const user = useAuth((s) => s.user);
+  const theme = useTheme();
+  const brandPrimary = theme.brandPrimary?.get() as string;
 
   // Set default selected package when they load
   if (!selectedPackage && packages.length > 0) {
@@ -100,7 +102,7 @@ export function PaywallScreen() {
                     shadowRadius={20}
                     shadowOpacity={0.2}
                 >
-                    <Star size={40} color="$brandPrimary" fill="$brandPrimary" />
+                    <Star size={40} color="$brandPrimary" fill={brandPrimary} />
                 </View>
                 <YStack alignItems="center" gap="$1">
                     <H2 color="white" fontWeight="900" fontSize={38} letterSpacing={-1.5} textAlign="center">

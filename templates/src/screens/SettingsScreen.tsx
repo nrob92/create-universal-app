@@ -1,4 +1,4 @@
-import { ScrollView, YStack, H2, XStack, Text, View, Separator, Switch, isWeb, Spinner } from 'tamagui';
+import { ScrollView, YStack, H2, XStack, Text, View, Separator, Switch, isWeb, Spinner, useTheme } from 'tamagui';
 import { ChevronRight, Bell, Shield, CircleUser, CreditCard, HelpCircle, Moon, Star, ArrowLeft, LogOut, Trash2 } from '@tamagui/lucide-icons';
 import { Alert } from 'react-native';
 import { SafePage } from '~/components/layout/PageContainer';
@@ -86,6 +86,8 @@ export function SettingsScreen() {
   const user = useAuth((s) => s.user);
   const { deleteAccount, isDeleting } = useProfile();
   const queryClient = useQueryClient();
+  const theme = useTheme();
+  const brandPrimary = theme.brandPrimary?.get() as string;
   
   // Replace the old Zustand store call with the new React Query hook
   const { data: isPro, isLoading: isProLoading } = useSubscriptionStatus(user?.id);
@@ -160,7 +162,7 @@ export function SettingsScreen() {
                     </Text>
                 </YStack>
                 <View backgroundColor="white" p="$2" borderRadius="$5">
-                    <Star size={20} color="$brandPrimary" fill="$brandPrimary" />
+                    <Star size={20} color="$brandPrimary" fill={brandPrimary} />
                 </View>
              </XStack>
 
